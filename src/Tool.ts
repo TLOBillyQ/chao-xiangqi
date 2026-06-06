@@ -1,5 +1,5 @@
 //import {vec3 } from 'genshin-ts/runtime/value'
-import type { bool, entity, float, vec3 } from 'genshin-ts/runtime/value'
+import type { bool, entity, faction, float, vec3 } from 'genshin-ts/runtime/value'
 import * as Global from './Global'
 import { UIControlGroupStatus } from 'genshin-ts/definitions/enum'
 import * as UIControl from  './UIControlGroupId'
@@ -270,4 +270,27 @@ export function gstsServerCaliImpulse(entity_1:entity,entity_2:entity)
     let triggerPos = Vector3.Add(startPos,Vector3.Scale(gsts.f._3dVectorNormalization(Vector3.Sub(entChess.pos,startPos)),finMovedis))
 
     return triggerPos
+  }
+
+  export function gstsServerGetInitSpeedFor(chessEntity:entity, chessType:string, pos:vec3, faction:faction): number
+  {
+    let initSpeed = chessEntity.get("initSpeed").asType("float")
+
+    if(faction == Global.factionRed)
+    {
+      if (pos.x < Global.Wall.center && chessType == "兵")
+      {
+        initSpeed = 25
+      }
+    }
+
+    if(faction == Global.factionBlack)
+    {
+      if (pos.x > Global.Wall.center && chessType == "兵")
+      {
+        initSpeed = 25
+      }
+    }
+
+    return initSpeed
   }

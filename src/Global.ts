@@ -60,6 +60,9 @@ export const dirPrefabs =
     black:prefabId(1077936135n)
 }
 
+// TODO: 由用户在编辑器创建 prefab 后填入真实 id
+export const trajectoryPrefabId = prefabId(0n)
+
 /**
  * 获取关卡实体
  */
@@ -179,7 +182,9 @@ export const DurchlassentityGuid = 1094713345n
 //标签id 
 export const EntityTag = {
     QiZi:1073741825n,
-    Dir:1073741826n
+    Dir:1073741826n,
+    // TODO: 由用户在编辑器创建 prefab 后填入真实 id
+    Trajectory: 0n
 }
 
 

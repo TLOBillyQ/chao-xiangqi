@@ -1,5 +1,5 @@
 import { g } from 'genshin-ts/runtime/core'
-import { gstsServerVec3ToVec2 } from '../Tool'
+import { gstsServerGetInitSpeedFor, gstsServerVec3ToVec2 } from '../Tool'
 import type { entity, float, vec3 } from 'genshin-ts/runtime/value'
 import * as Global from '../Global'
 import { gstsServerAddMoveEntity } from '../ChangeControl'
@@ -27,28 +27,7 @@ export function gstsServerSureToMove(dirEntity:entity,powerPercent:number,curPla
 
   let chessType = motherEntity.get("棋子类型").asType("str")
   let Mass = motherEntity.get("Mass").asType("float")
-
-  let initSpeed = motherEntity.get("initSpeed").asType("float")
-  let Faction = motherEntity.faction()
-  let pos = motherEntity.pos
-
-
-  //兵过河后 初速度会变化
-  if(Faction == Global.factionRed)
-  {
-    if (pos.x < Global.Wall.center && chessType == "兵")
-    {
-      initSpeed = 25
-    }
-  }
-
-  if(Faction == Global.factionBlack)
-  {
-    if (pos.x > Global.Wall.center && chessType == "兵")
-    {
-      initSpeed = 25
-    }
-  }
+  let initSpeed = gstsServerGetInitSpeedFor(motherEntity, chessType, motherEntity.pos, motherEntity.faction())
 
 
   gsts.f.setCustomVariable(motherEntity,"moveVec",gsts.f._3dVectorZoom(relVec,initSpeed*powerPercent))
