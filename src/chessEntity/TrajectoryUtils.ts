@@ -35,7 +35,7 @@ export function gstsServerRayCircleIntersect(
     }
   }
 
-  return { hit, t, point }
+  return { hit: (hit as any).value, t: (t as any).value, point: (point as any).value }
 }
 
 export function gstsServerRayPlaneIntersect(
@@ -79,13 +79,13 @@ type GstsTrajectoryWallHit = {
   t: number
   point: vec3
   wallNormal: vec3
-  hitChess: false
+  hitChess: 0
 }
 
 type GstsTrajectoryChessHit = {
   t: number
   point: vec3
-  hitChess: true
+  hitChess: 1
 }
 
 type GstsTrajectoryHit = GstsTrajectoryWallHit | GstsTrajectoryChessHit
@@ -112,8 +112,8 @@ function gstsServerFindNearestChessPreviewHit(origin: vec3, dir: vec3, shooterEn
   for (const chess of allChess) {
     if (chess != shooterEntity) {
       const result = gstsServerRayCircleIntersect(origin, dir, chess.pos, Global.radius)
-      if (result.hit) {
-        nearestHit = gstsServerGetNearerPreviewHit(nearestHit, { t: result.t, point: result.point, hitChess: true })
+      if (result.t > GSTS_TRAJECTORY_EPSILON) {
+        nearestHit = gstsServerGetNearerPreviewHit(nearestHit, { t: result.t, point: result.point, hitChess: 1 as 1 })
       }
     }
   }
@@ -131,8 +131,8 @@ function gstsServerGetNearerPreviewWallHit(
   const result = gstsServerRayPlaneIntersect(origin, dir, wallNormal, wallPoint)
   let nextHit = nearestHit
 
-  if (result.hit) {
-    nextHit = gstsServerGetNearerPreviewHit(nearestHit, { t: result.t, point: result.point, wallNormal, hitChess: false })
+  if (result.t > GSTS_TRAJECTORY_EPSILON) {
+    nextHit = gstsServerGetNearerPreviewHit(nearestHit, { t: result.t, point: result.point, wallNormal, hitChess: 0 as 0 })
   }
 
   return nextHit
@@ -228,7 +228,7 @@ export function gstsServerCalcTrajectoryPreview(
   if (firstHit != null) {
     seg1End = firstHit.point
 
-    if (firstHit.hitChess) {
+    if (firstHit.hitChess === 1) {
       hitChess = true
     } else {
       const reflectDir = gstsServerReflectVec(normalizedDir, firstHit.wallNormal)

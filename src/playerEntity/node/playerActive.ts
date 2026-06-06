@@ -1,10 +1,12 @@
 import { g } from 'genshin-ts/runtime/core'
-import { entity, float,ReadonlyDict, vec3 } from 'genshin-ts/runtime/value'
-import { gsteServerpieceDirections_red,gsteServerpieceDirections_black ,gridNormalization,EntityTag,Wall,dirPrefabs, factionRed, factionBlack} from '../../Global'
+import { entity, faction, float,ReadonlyDict, vec3 } from 'genshin-ts/runtime/value'
+import { gsteServerpieceDirections_red,gsteServerpieceDirections_black ,gridNormalization,EntityTag,Wall,dirPrefabs, factionRed, factionBlack, trajectoryPrefabId, getServerStageEntity} from '../../Global'
 //import { gstsServerSureToMove } from '../qizi/qizi_move'
 import { PlayerEntity } from 'genshin-ts/definitions/nodes'
 import { gstsServerCanControl } from '../../ChangeControl'
 import { gstsServerActiviteChangeUI, gstsServerActiviteDirUI } from '../../UIControl/ControlUIFunc'
+import { gstsServerCalcTrajectoryPreview } from '../../chessEntity/TrajectoryUtils'
+import { gstsServerVec3ToVec2 } from '../../Tool'
 
 g.server({
   id: 1073741829,
@@ -98,6 +100,7 @@ function gstsServerCreateDirEffect(targetEntity:entity,controlEntity:PlayerEntit
     gstsServerActiviteChangeUI(controlEntity)
     //激活方向
     gstsServerActiviteDirUI(controlEntity,qiziKey)
+    gstsServerSpawnTrajectoryLine(targetEntity, dirList[0], qiziKey, Faction)
 }
 
 
@@ -129,6 +132,32 @@ export function gstsServerDestroyOldDirTag()
 }
 
 
+function gstsServerSpawnTrajectoryLine(chessEntity: entity, dirVec: vec3, chessType: string, faction: faction) {
+  const worldDir = gstsServerVec3ToVec2(dirVec)
+  const normalizedDir = gsts.f._3dVectorNormalization(worldDir)
+  const origin = chessEntity.pos
+  const preview = gstsServerCalcTrajectoryPreview(origin, normalizedDir, chessType, faction, chessEntity)
+  gstsServerCreateTrajectorySegment(origin, preview.seg1End)
+  if (preview.seg2End != null) {
+    gstsServerCreateTrajectorySegment(preview.seg1End, preview.seg2End)
+  }
+}
+
+function gstsServerCreateTrajectorySegment(start: vec3, end: vec3) {
+  const midX = (start.x + end.x) / 2
+  const midY = (start.y + end.y) / 2
+  const midZ = (start.z + end.z) / 2
+  const midPoint = gsts.f.create3dVector(midX, midY, midZ)
+  gsts.f.createPrefab(
+    trajectoryPrefabId,
+    midPoint,
+    [0, 0, 0],
+    getServerStageEntity(),
+    true,
+    1,
+    [EntityTag.Trajectory]
+  )
+}
 
 
 
