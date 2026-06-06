@@ -1,4 +1,5 @@
-import type { vec3 } from 'genshin-ts/runtime/value'
+import type { entity, faction, vec3 } from 'genshin-ts/runtime/value'
+import * as Global from '../Global'
 
 const GSTS_TRAJECTORY_EPSILON = 0.001
 const GSTS_TRAJECTORY_PARALLEL_EPSILON = 0.0001
@@ -70,4 +71,176 @@ export function gstsServerReflectVec(incident: vec3, normal: vec3): vec3 {
   const step2 = gsts.f._3dVectorZoom(step1, 2)
   const reflectVec = gsts.f._3dVectorSubtraction(incident, step2)
   return gsts.f._3dVectorNormalization(reflectVec)
+}
+
+const MAX_PREVIEW_DIST = 60
+
+type GstsTrajectoryWallHit = {
+  t: number
+  point: vec3
+  wallNormal: vec3
+  hitChess: false
+}
+
+type GstsTrajectoryChessHit = {
+  t: number
+  point: vec3
+  hitChess: true
+}
+
+type GstsTrajectoryHit = GstsTrajectoryWallHit | GstsTrajectoryChessHit
+
+function gstsServerGetPreviewMaxPoint(origin: vec3, dir: vec3): vec3 {
+  const offset = gsts.f._3dVectorZoom(dir, MAX_PREVIEW_DIST)
+  return gsts.f._3dVectorAddition(origin, offset)
+}
+
+function gstsServerGetNearerPreviewHit(nearestHit: GstsTrajectoryHit | null, hit: GstsTrajectoryHit): GstsTrajectoryHit | null {
+  let result = nearestHit
+
+  if (hit.t <= MAX_PREVIEW_DIST && (nearestHit == null || hit.t < nearestHit.t)) {
+    result = hit
+  }
+
+  return result
+}
+
+function gstsServerFindNearestChessPreviewHit(origin: vec3, dir: vec3, shooterEntity: entity): GstsTrajectoryHit | null {
+  let nearestHit: GstsTrajectoryHit | null = null
+  const allChess = gsts.f.getEntityListByUnitTag(Global.EntityTag.QiZi)
+
+  for (const chess of allChess) {
+    if (chess != shooterEntity) {
+      const result = gstsServerRayCircleIntersect(origin, dir, chess.pos, Global.radius)
+      if (result.hit) {
+        nearestHit = gstsServerGetNearerPreviewHit(nearestHit, { t: result.t, point: result.point, hitChess: true })
+      }
+    }
+  }
+
+  return nearestHit
+}
+
+function gstsServerGetNearerPreviewWallHit(
+  nearestHit: GstsTrajectoryHit | null,
+  origin: vec3,
+  dir: vec3,
+  wallNormal: vec3,
+  wallPoint: vec3
+): GstsTrajectoryHit | null {
+  const result = gstsServerRayPlaneIntersect(origin, dir, wallNormal, wallPoint)
+  let nextHit = nearestHit
+
+  if (result.hit) {
+    nextHit = gstsServerGetNearerPreviewHit(nearestHit, { t: result.t, point: result.point, wallNormal, hitChess: false })
+  }
+
+  return nextHit
+}
+
+function gstsServerFindNearestWallPreviewHit(origin: vec3, dir: vec3, chessType: string, faction: faction): GstsTrajectoryHit | null {
+  let nearestHit: GstsTrajectoryHit | null = null
+
+  nearestHit = gstsServerGetNearerPreviewWallHit(
+    nearestHit,
+    origin,
+    dir,
+    gsts.f.create3dVector(0, 0, 1),
+    gsts.f.create3dVector(0, 0, Global.Wall.leftz)
+  )
+  nearestHit = gstsServerGetNearerPreviewWallHit(
+    nearestHit,
+    origin,
+    dir,
+    gsts.f.create3dVector(0, 0, -1),
+    gsts.f.create3dVector(0, 0, Global.Wall.rightz)
+  )
+  nearestHit = gstsServerGetNearerPreviewWallHit(
+    nearestHit,
+    origin,
+    dir,
+    gsts.f.create3dVector(1, 0, 0),
+    gsts.f.create3dVector(Global.Wall.topx, 0, 0)
+  )
+  nearestHit = gstsServerGetNearerPreviewWallHit(
+    nearestHit,
+    origin,
+    dir,
+    gsts.f.create3dVector(-1, 0, 0),
+    gsts.f.create3dVector(Global.Wall.floorx, 0, 0)
+  )
+
+  if (chessType == '士' || chessType == '帅' || chessType == '将') {
+    const nineWall = Global.gsteServerGetNineWall(faction)
+    const nineWallLeftZ = nineWall[0]
+    const nineWallRightZ = nineWall[1]
+    const nineWallForwardX = nineWall[2]
+
+    nearestHit = gstsServerGetNearerPreviewWallHit(nearestHit, origin, dir, gsts.f.create3dVector(0, 0, 1), gsts.f.create3dVector(0, 0, nineWallLeftZ))
+    nearestHit = gstsServerGetNearerPreviewWallHit(nearestHit, origin, dir, gsts.f.create3dVector(0, 0, -1), gsts.f.create3dVector(0, 0, nineWallRightZ))
+
+    if (faction == Global.factionRed) {
+      nearestHit = gstsServerGetNearerPreviewWallHit(nearestHit, origin, dir, gsts.f.create3dVector(1, 0, 0), gsts.f.create3dVector(nineWallForwardX, 0, 0))
+    }
+
+    if (faction == Global.factionBlack) {
+      nearestHit = gstsServerGetNearerPreviewWallHit(nearestHit, origin, dir, gsts.f.create3dVector(-1, 0, 0), gsts.f.create3dVector(nineWallForwardX, 0, 0))
+    }
+  }
+
+  if (chessType == '象' || chessType == '相') {
+    if (faction == Global.factionRed) {
+      nearestHit = gstsServerGetNearerPreviewWallHit(nearestHit, origin, dir, gsts.f.create3dVector(-1, 0, 0), gsts.f.create3dVector(Global.Wall.center, 0, 0))
+    }
+
+    if (faction == Global.factionBlack) {
+      nearestHit = gstsServerGetNearerPreviewWallHit(nearestHit, origin, dir, gsts.f.create3dVector(1, 0, 0), gsts.f.create3dVector(Global.Wall.center, 0, 0))
+    }
+  }
+
+  return nearestHit
+}
+
+function gstsServerFindNearestPreviewHit(origin: vec3, dir: vec3, chessType: string, faction: faction, shooterEntity: entity): GstsTrajectoryHit | null {
+  let nearestHit = gstsServerFindNearestChessPreviewHit(origin, dir, shooterEntity)
+  const wallHit = gstsServerFindNearestWallPreviewHit(origin, dir, chessType, faction)
+
+  if (wallHit != null) {
+    nearestHit = gstsServerGetNearerPreviewHit(nearestHit, wallHit)
+  }
+
+  return nearestHit
+}
+
+export function gstsServerCalcTrajectoryPreview(
+  origin: vec3,
+  dir: vec3,
+  chessType: string,
+  faction: faction,
+  shooterEntity: entity
+): { seg1End: vec3; seg2End: vec3 | null; hitChess: boolean } {
+  const normalizedDir = gsts.f._3dVectorNormalization(dir)
+  const firstHit = gstsServerFindNearestPreviewHit(origin, normalizedDir, chessType, faction, shooterEntity)
+  let seg1End = gstsServerGetPreviewMaxPoint(origin, normalizedDir)
+  let seg2End: vec3 | null = null
+  let hitChess = false
+
+  if (firstHit != null) {
+    seg1End = firstHit.point
+
+    if (firstHit.hitChess) {
+      hitChess = true
+    } else {
+      const reflectDir = gstsServerReflectVec(normalizedDir, firstHit.wallNormal)
+      const secondHit = gstsServerFindNearestPreviewHit(firstHit.point, reflectDir, chessType, faction, shooterEntity)
+
+      if (secondHit == null) {
+        seg2End = gstsServerGetPreviewMaxPoint(firstHit.point, reflectDir)
+      } else {
+        seg2End = secondHit.point
+      }
+    }
+  }
+
+  return { seg1End, seg2End, hitChess }
 }
