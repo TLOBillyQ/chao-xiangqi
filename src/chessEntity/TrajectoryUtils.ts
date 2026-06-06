@@ -141,34 +141,10 @@ function gstsServerGetNearerPreviewWallHit(
 function gstsServerFindNearestWallPreviewHit(origin: vec3, dir: vec3, chessType: string, faction: faction): GstsTrajectoryHit | null {
   let nearestHit: GstsTrajectoryHit | null = null
 
-  nearestHit = gstsServerGetNearerPreviewWallHit(
-    nearestHit,
-    origin,
-    dir,
-    gsts.f.create3dVector(0, 0, 1),
-    gsts.f.create3dVector(0, 0, Global.Wall.leftz)
-  )
-  nearestHit = gstsServerGetNearerPreviewWallHit(
-    nearestHit,
-    origin,
-    dir,
-    gsts.f.create3dVector(0, 0, -1),
-    gsts.f.create3dVector(0, 0, Global.Wall.rightz)
-  )
-  nearestHit = gstsServerGetNearerPreviewWallHit(
-    nearestHit,
-    origin,
-    dir,
-    gsts.f.create3dVector(1, 0, 0),
-    gsts.f.create3dVector(Global.Wall.topx, 0, 0)
-  )
-  nearestHit = gstsServerGetNearerPreviewWallHit(
-    nearestHit,
-    origin,
-    dir,
-    gsts.f.create3dVector(-1, 0, 0),
-    gsts.f.create3dVector(Global.Wall.floorx, 0, 0)
-  )
+  nearestHit = gstsServerGetNearerPreviewWallHit(nearestHit, origin, dir, gsts.f.create3dVector(0, 0, 1), gsts.f.create3dVector(0, 0, Global.Wall.leftz))
+  nearestHit = gstsServerGetNearerPreviewWallHit(nearestHit, origin, dir, gsts.f.create3dVector(0, 0, -1), gsts.f.create3dVector(0, 0, Global.Wall.rightz))
+  nearestHit = gstsServerGetNearerPreviewWallHit(nearestHit, origin, dir, gsts.f.create3dVector(1, 0, 0), gsts.f.create3dVector(Global.Wall.topx, 0, 0))
+  nearestHit = gstsServerGetNearerPreviewWallHit(nearestHit, origin, dir, gsts.f.create3dVector(-1, 0, 0), gsts.f.create3dVector(Global.Wall.floorx, 0, 0))
 
   if (chessType == '士' || chessType == '帅' || chessType == '将') {
     const nineWall = Global.gsteServerGetNineWall(faction)

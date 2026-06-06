@@ -1,6 +1,7 @@
 import { g } from 'genshin-ts/runtime/core'
 import { gstsServerSureToMove } from '../../chessEntity/chessObjFunction'
 import { dirPrefabs } from '../../Global'
+import * as Global from '../../Global'
 import { gstsServerHideUIByChargeStop } from '../../UIControl/ControlUIFunc'
 
 g.server({
@@ -43,6 +44,11 @@ g.server({
             gstsServerSureToMove(tagPrefabListBlack[tagPrefabListBlack.length-1],powerPercent,self)
         }
         gsts.f.destroyEntity(tagPrefabListBlack[tagPrefabListBlack.length-1])
+      }
+
+      let trajList = gsts.f.getEntitiesWithSpecifiedPrefabOnTheField(Global.trajectoryPrefabId)
+      while(trajList.length > 0) {
+        gsts.f.destroyEntity(trajList[trajList.length-1])
       }
 
       //清理自身变量

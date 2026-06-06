@@ -5,8 +5,8 @@ import { gsteServerpieceDirections_red,gsteServerpieceDirections_black ,gridNorm
 import { PlayerEntity } from 'genshin-ts/definitions/nodes'
 import { gstsServerCanControl } from '../../ChangeControl'
 import { gstsServerActiviteChangeUI, gstsServerActiviteDirUI } from '../../UIControl/ControlUIFunc'
-import { gstsServerCalcTrajectoryPreview } from '../../chessEntity/TrajectoryUtils'
 import { gstsServerVec3ToVec2 } from '../../Tool'
+import * as TrajectoryUtils from '../../chessEntity/TrajectoryUtils'
 
 g.server({
   id: 1073741829,
@@ -129,6 +129,11 @@ export function gstsServerDestroyOldDirTag()
     gsts.f.destroyEntity(tagPrefabListBlack[tagPrefabListBlack.length-1])
   }
 
+  let trajList = gsts.f.getEntitiesWithSpecifiedPrefabOnTheField(trajectoryPrefabId)
+  while(trajList.length > 0) {
+    gsts.f.destroyEntity(trajList[trajList.length-1])
+  }
+
 }
 
 
@@ -136,7 +141,7 @@ function gstsServerSpawnTrajectoryLine(chessEntity: entity, dirVec: vec3, chessT
   const worldDir = gstsServerVec3ToVec2(dirVec)
   const normalizedDir = gsts.f._3dVectorNormalization(worldDir)
   const origin = chessEntity.pos
-  const preview = gstsServerCalcTrajectoryPreview(origin, normalizedDir, chessType, faction, chessEntity)
+  const preview = TrajectoryUtils.gstsServerCalcTrajectoryPreview(origin, normalizedDir, chessType, faction, chessEntity)
   gstsServerCreateTrajectorySegment(origin, preview.seg1End)
   if (preview.seg2End != null) {
     gstsServerCreateTrajectorySegment(preview.seg1End, preview.seg2End)
@@ -158,9 +163,3 @@ function gstsServerCreateTrajectorySegment(start: vec3, end: vec3) {
     [EntityTag.Trajectory]
   )
 }
-
-
-
-
-
-
