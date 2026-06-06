@@ -137,7 +137,7 @@ export function gstsServerDestroyOldDirTag()
 }
 
 
-function gstsServerSpawnTrajectoryLine(chessEntity: entity, dirVec: vec3, chessType: string, faction: faction) {
+export function gstsServerSpawnTrajectoryLine(chessEntity: entity, dirVec: vec3, chessType: string, faction: faction) {
   const worldDir = gstsServerVec3ToVec2(dirVec)
   const normalizedDir = gsts.f._3dVectorNormalization(worldDir)
   const origin = chessEntity.pos

@@ -1,8 +1,9 @@
 import { g } from 'genshin-ts/runtime/core'
-import { EntityTag } from '../../Global'
+import { trajectoryPrefabId, EntityTag, gsteServerpieceDirections_red, gsteServerpieceDirections_black, factionBlack } from '../../Global'
 import { UIControlGroupStatus } from 'genshin-ts/definitions/enum'
 import * as UIControl from  '../../UIControlGroupId'
 import { PlayerEntity } from 'genshin-ts/definitions/nodes'
+import { gstsServerSpawnTrajectoryLine } from './playerActive'
 
 g.server({
   id: 1073741841,
@@ -55,5 +56,19 @@ g.server({
 
   controlEntity.set("curDirIndex",newIndex)
   controlEntity.setUiControlStatus(dirList[idx(int(newIndex))],UIControlGroupStatus.On)
+
+  let trajList = gsts.f.getEntitiesWithSpecifiedPrefabOnTheField(trajectoryPrefabId)
+  while(trajList.length > 0) {
+    gsts.f.destroyEntity(trajList[trajList.length-1])
+  }
+
+  const curChooseChess = controlEntity.get("curChooseChess").asType("entity")
+  const chessFaction = gsts.f.queryEntityFaction(curChooseChess)
+  let dirVecList = gsteServerpieceDirections_red(curChooseChessType)
+  if (chessFaction == factionBlack) {
+    dirVecList = gsteServerpieceDirections_black(curChooseChessType)
+  }
+  const dirVec = dirVecList[idx(int(newIndex))]
+  gstsServerSpawnTrajectoryLine(curChooseChess, dirVec, curChooseChessType, chessFaction)
 })
 
