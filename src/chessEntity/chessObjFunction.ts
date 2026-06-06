@@ -48,9 +48,10 @@ export function gstsServerSureToMove(
     motherEntity.faction()
   )
 
+  // ±1° 随机偏移，产生「手指弹」手感。绕世界Y轴旋转，在水平面内偏移。
+  // 注意：偏移后的 finalRelVec 同时用于 moveVec 自定义变量和运动器，保持一致性。
   const offsetDeg = (Math.random() - 0.5) * 2.0
-  console.log('[OFFSET DEBUG] offsetDeg:', offsetDeg)
-  const finalRelVec = gsts.f._3dVectorRotation([0, offsetDeg, 0], relVec)
+  const finalRelVec = gsts.f._3dVectorRotation(gsts.f.create3dVector(0, offsetDeg, 0), relVec)
 
   gsts.f.setCustomVariable(
     motherEntity,
