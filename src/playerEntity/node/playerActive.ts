@@ -149,10 +149,8 @@ export function gstsServerSpawnTrajectoryLine(chessEntity: entity, dirVec: vec3,
 }
 
 function gstsServerCreateTrajectorySegment(start: vec3, end: vec3) {
-  const midX = (start.x + end.x) / 2
-  const midY = (start.y + end.y) / 2
-  const midZ = (start.z + end.z) / 2
-  const midPoint = gsts.f.create3dVector(midX, midY, midZ)
+  const sum = gsts.f._3dVectorAddition(start, end)
+  const midPoint = gsts.f._3dVectorZoom(sum, 0.5)
   gsts.f.createPrefab(
     trajectoryPrefabId,
     midPoint,
