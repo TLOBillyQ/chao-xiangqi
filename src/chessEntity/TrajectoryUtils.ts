@@ -1,4 +1,5 @@
 import type { entity, faction, vec3 } from 'genshin-ts/runtime/value'
+
 import * as Global from '../Global'
 
 const GSTS_TRAJECTORY_EPSILON = 0.001
@@ -91,52 +92,110 @@ function gstsServerFindFirstHit(
     }
   }
 
-  best = gstsServerCheckWall(best, origin, dir, gsts.f.create3dVector(0, 0, 1), gsts.f.create3dVector(0, 0, Global.Wall.leftz))
-  best = gstsServerCheckWall(best, origin, dir, gsts.f.create3dVector(0, 0, -1), gsts.f.create3dVector(0, 0, Global.Wall.rightz))
-  best = gstsServerCheckWall(best, origin, dir, gsts.f.create3dVector(1, 0, 0), gsts.f.create3dVector(Global.Wall.topx, 0, 0))
-  best = gstsServerCheckWall(best, origin, dir, gsts.f.create3dVector(-1, 0, 0), gsts.f.create3dVector(Global.Wall.floorx, 0, 0))
+  best = gstsServerCheckWall(
+    best,
+    origin,
+    dir,
+    gsts.f.create3dVector(0, 0, 1),
+    gsts.f.create3dVector(0, 0, Global.Wall.leftz)
+  )
+  best = gstsServerCheckWall(
+    best,
+    origin,
+    dir,
+    gsts.f.create3dVector(0, 0, -1),
+    gsts.f.create3dVector(0, 0, Global.Wall.rightz)
+  )
+  best = gstsServerCheckWall(
+    best,
+    origin,
+    dir,
+    gsts.f.create3dVector(1, 0, 0),
+    gsts.f.create3dVector(Global.Wall.topx, 0, 0)
+  )
+  best = gstsServerCheckWall(
+    best,
+    origin,
+    dir,
+    gsts.f.create3dVector(-1, 0, 0),
+    gsts.f.create3dVector(Global.Wall.floorx, 0, 0)
+  )
 
   if (chessType == '士' || chessType == '帅' || chessType == '将') {
-    const nineWall = Global.gsteServerGetNineWall(faction)
+    const nineWall = Global.gstsServerGetNineWall(faction)
     const nineWallLeftZ = nineWall[0]
     const nineWallRightZ = nineWall[1]
     const nineWallForwardX = nineWall[2]
-    best = gstsServerCheckWall(best, origin, dir, gsts.f.create3dVector(0, 0, 1), gsts.f.create3dVector(0, 0, nineWallLeftZ))
-    best = gstsServerCheckWall(best, origin, dir, gsts.f.create3dVector(0, 0, -1), gsts.f.create3dVector(0, 0, nineWallRightZ))
+    best = gstsServerCheckWall(
+      best,
+      origin,
+      dir,
+      gsts.f.create3dVector(0, 0, 1),
+      gsts.f.create3dVector(0, 0, nineWallLeftZ)
+    )
+    best = gstsServerCheckWall(
+      best,
+      origin,
+      dir,
+      gsts.f.create3dVector(0, 0, -1),
+      gsts.f.create3dVector(0, 0, nineWallRightZ)
+    )
     if (faction == Global.factionRed) {
-      best = gstsServerCheckWall(best, origin, dir, gsts.f.create3dVector(1, 0, 0), gsts.f.create3dVector(nineWallForwardX, 0, 0))
+      best = gstsServerCheckWall(
+        best,
+        origin,
+        dir,
+        gsts.f.create3dVector(1, 0, 0),
+        gsts.f.create3dVector(nineWallForwardX, 0, 0)
+      )
     }
     if (faction == Global.factionBlack) {
-      best = gstsServerCheckWall(best, origin, dir, gsts.f.create3dVector(-1, 0, 0), gsts.f.create3dVector(nineWallForwardX, 0, 0))
+      best = gstsServerCheckWall(
+        best,
+        origin,
+        dir,
+        gsts.f.create3dVector(-1, 0, 0),
+        gsts.f.create3dVector(nineWallForwardX, 0, 0)
+      )
     }
   }
 
   if (chessType == '象' || chessType == '相') {
     if (faction == Global.factionRed) {
-      best = gstsServerCheckWall(best, origin, dir, gsts.f.create3dVector(-1, 0, 0), gsts.f.create3dVector(Global.Wall.center, 0, 0))
+      best = gstsServerCheckWall(
+        best,
+        origin,
+        dir,
+        gsts.f.create3dVector(-1, 0, 0),
+        gsts.f.create3dVector(Global.Wall.center, 0, 0)
+      )
     }
     if (faction == Global.factionBlack) {
-      best = gstsServerCheckWall(best, origin, dir, gsts.f.create3dVector(1, 0, 0), gsts.f.create3dVector(Global.Wall.center, 0, 0))
+      best = gstsServerCheckWall(
+        best,
+        origin,
+        dir,
+        gsts.f.create3dVector(1, 0, 0),
+        gsts.f.create3dVector(Global.Wall.center, 0, 0)
+      )
     }
   }
 
   return best
 }
 
-function gstsServerSpawnSegment(start: vec3, end: vec3): void {
+function gstsServerSpawnSegment(start: vec3, end: vec3, faction: faction): void {
   const midX = (start.x + end.x) * 0.5
   const midY = (start.y + end.y) * 0.5
   const midZ = (start.z + end.z) * 0.5
   const midPoint = gsts.f.create3dVector(midX, midY, midZ)
-  gsts.f.createPrefab(
-    Global.trajectoryPrefabId,
-    midPoint,
-    [0, 0, 0],
-    Global.getServerStageEntity(),
-    true,
-    1,
-    [Global.EntityTag.Trajectory]
-  )
+  let prefab = Global.dirPrefabs.red
+  if (faction == Global.factionBlack) {
+    prefab = Global.dirPrefabs.black
+  }
+  gsts.f.createPrefab(prefab, midPoint, [0, 0, 0], Global.gstsServerGetStageEntity(), true, 1, [
+    Global.EntityTag.Trajectory
+  ])
 }
 
 export function gstsServerSpawnTrajectoryForDir(
@@ -149,19 +208,31 @@ export function gstsServerSpawnTrajectoryForDir(
   const firstHit = gstsServerFindFirstHit(origin, normalizedDir, chessType, faction, shooterEntity)
 
   if (firstHit.hasHit) {
-    gstsServerSpawnSegment(origin, firstHit.point)
+    gstsServerSpawnSegment(origin, firstHit.point, faction)
     if (!firstHit.hitChess) {
       const reflectDir = gstsServerReflectVec(normalizedDir, firstHit.wallNormal)
-      const secondHit = gstsServerFindFirstHit(firstHit.point, reflectDir, chessType, faction, shooterEntity)
+      const secondHit = gstsServerFindFirstHit(
+        firstHit.point,
+        reflectDir,
+        chessType,
+        faction,
+        shooterEntity
+      )
       if (secondHit.hasHit) {
-        gstsServerSpawnSegment(firstHit.point, secondHit.point)
+        gstsServerSpawnSegment(firstHit.point, secondHit.point, faction)
       } else {
-        const seg2End = gsts.f._3dVectorAddition(firstHit.point, gsts.f._3dVectorZoom(reflectDir, MAX_PREVIEW_DIST))
-        gstsServerSpawnSegment(firstHit.point, seg2End)
+        const seg2End = gsts.f._3dVectorAddition(
+          firstHit.point,
+          gsts.f._3dVectorZoom(reflectDir, MAX_PREVIEW_DIST)
+        )
+        gstsServerSpawnSegment(firstHit.point, seg2End, faction)
       }
     }
   } else {
-    const seg1End = gsts.f._3dVectorAddition(origin, gsts.f._3dVectorZoom(normalizedDir, MAX_PREVIEW_DIST))
-    gstsServerSpawnSegment(origin, seg1End)
+    const seg1End = gsts.f._3dVectorAddition(
+      origin,
+      gsts.f._3dVectorZoom(normalizedDir, MAX_PREVIEW_DIST)
+    )
+    gstsServerSpawnSegment(origin, seg1End, faction)
   }
 }

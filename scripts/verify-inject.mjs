@@ -4,7 +4,8 @@ import { join, normalize } from 'node:path'
 
 const playerId = 342478178
 const mapId = 1073741861
-const localAppData = process.env.LOCALAPPDATA ?? join(process.env.USERPROFILE ?? '', 'AppData', 'Local')
+const localAppData =
+  process.env.LOCALAPPDATA ?? join(process.env.USERPROFILE ?? '', 'AppData', 'Local')
 const mapPath = normalize(
   join(
     localAppData,

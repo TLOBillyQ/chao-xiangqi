@@ -18,14 +18,14 @@ export function gstsServerVec3ToVec2(vector3: vec3) {
  * @returns
  */
 
-export function gstsCalselfreflect‌Vec(enterVec: vec3, vecFa: vec3): vec3 {
+export function gstsServerCalSelfReflectVec(enterVec: vec3, vecFa: vec3): vec3 {
   //let R = enterVec- 2 (enterVec.vecFa) vecFa
-  let step1 = gsts.f._3dVectorDotProduct(enterVec, vecFa)
-  let step2 = gsts.f._3dVectorZoom(vecFa, step1)
-  let step3 = gsts.f._3dVectorZoom(step2, 2)
-  let reflect‌Vec = gsts.f._3dVectorSubtraction(enterVec, step3)
+  const step1 = gsts.f._3dVectorDotProduct(enterVec, vecFa)
+  const step2 = gsts.f._3dVectorZoom(vecFa, step1)
+  const step3 = gsts.f._3dVectorZoom(step2, 2)
+  const reflectVec = gsts.f._3dVectorSubtraction(enterVec, step3)
 
-  return reflect‌Vec
+  return reflectVec
 }
 
 export function gstsServerCaliImpulse(entity_1: entity, entity_2: entity) {
@@ -63,7 +63,7 @@ export function gstsServerCaliImpulse(entity_1: entity, entity_2: entity) {
 
   vecN = gsts.f._3dVectorNormalization(vecN)
   //获取出发坐标
-  let startPos = Global.getServerStageEntity()
+  let startPos = Global.gstsServerGetStageEntity()
     .get('curPlayer')
     .asType('entity')
     .get('startPos')
@@ -184,7 +184,7 @@ export function gstsServerErrorMsg(msg: string, conplayer: entity, isMine: boole
     conplayer.setUiControlStatus(1073742872n, UIControlGroupStatus.Off)
     conplayer.setUiControlStatus(1073742910n, UIControlGroupStatus.On)
   }
-  Global.getServerStageEntity().set('ErrorMsg', msg)
+  Global.gstsServerGetStageEntity().set('ErrorMsg', msg)
   setTimeout((_e) => {
     conplayer.setUiControlStatus(1073742874n, UIControlGroupStatus.Off)
   }, 3000)
@@ -198,7 +198,7 @@ export function gstsServerErrorMsgNew(msg: string, conplayer: entity, _isMine: b
   //全屏动效
   conplayer.playUiAnimationOnControl(1073742871n)
 
-  Global.getServerStageEntity().set('ErrorMsg', msg)
+  Global.gstsServerGetStageEntity().set('ErrorMsg', msg)
   setTimeout((_e) => {
     conplayer.setUiControlStatus(1073742874n, UIControlGroupStatus.Off)
   }, 3000)
@@ -211,7 +211,7 @@ export function gstsServerErrorMsgNew(msg: string, conplayer: entity, _isMine: b
  * @returns
  */
 export function gstsServerRealDir(FirstShess: entity, SecondChess: entity) {
-  let startPos = Global.getServerStageEntity()
+  let startPos = Global.gstsServerGetStageEntity()
     .get('curPlayer')
     .asType('entity')
     .get('startPos')
