@@ -141,23 +141,5 @@ export function gstsServerSpawnTrajectoryLine(chessEntity: entity, dirVec: vec3,
   const worldDir = gstsServerVec3ToVec2(dirVec)
   const normalizedDir = gsts.f._3dVectorNormalization(worldDir)
   const origin = chessEntity.pos
-  const preview = TrajectoryUtils.gstsServerCalcTrajectoryPreview(origin, normalizedDir, chessType, faction, chessEntity)
-  gstsServerCreateTrajectorySegment(origin, preview.seg1End)
-  if (preview.seg2End != null) {
-    gstsServerCreateTrajectorySegment(preview.seg1End, preview.seg2End)
-  }
-}
-
-function gstsServerCreateTrajectorySegment(start: vec3, end: vec3) {
-  const sum = gsts.f._3dVectorAddition(start, end)
-  const midPoint = gsts.f._3dVectorZoom(sum, 0.5)
-  gsts.f.createPrefab(
-    trajectoryPrefabId,
-    midPoint,
-    [0, 0, 0],
-    getServerStageEntity(),
-    true,
-    1,
-    [EntityTag.Trajectory]
-  )
+  TrajectoryUtils.gstsServerSpawnTrajectoryForDir(origin, normalizedDir, chessType, faction, chessEntity)
 }

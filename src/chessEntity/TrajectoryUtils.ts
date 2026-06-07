@@ -5,67 +5,6 @@ const GSTS_TRAJECTORY_EPSILON = 0.001
 const GSTS_TRAJECTORY_PARALLEL_EPSILON = 0.0001
 const MAX_PREVIEW_DIST = 60
 
-export function gstsServerRayCircleIntersect(
-  origin: vec3,
-  dir: vec3,
-  center: vec3,
-  radius: number
-): { hit: boolean; t: number; point: vec3 } {
-  let hit = false
-  let t = 0
-  let point = origin
-
-  const dir2D = gsts.f.create3dVector(dir.x, 0, dir.z)
-  const d = gsts.f._3dVectorSubtraction(center, origin)
-  const d2D = gsts.f.create3dVector(d.x, 0, d.z)
-
-  const tProj = gsts.f._3dVectorDotProduct(d2D, dir2D)
-  const dLenSq = gsts.f._3dVectorDotProduct(d2D, d2D)
-  const e2 = dLenSq - tProj * tProj
-  const r2 = radius * radius
-
-  if (e2 <= r2) {
-    const dt = Mathf.Sqrt(r2 - e2)
-    const tHit = tProj - dt
-
-    if (tHit > GSTS_TRAJECTORY_EPSILON) {
-      const offset = gsts.f._3dVectorZoom(dir, tHit)
-      point = gsts.f._3dVectorAddition(origin, offset)
-      t = tHit
-      hit = true
-    }
-  }
-
-  return { hit, t, point }
-}
-
-export function gstsServerRayPlaneIntersect(
-  origin: vec3,
-  dir: vec3,
-  wallNormal: vec3,
-  wallPoint: vec3
-): { hit: boolean; t: number; point: vec3 } {
-  let hit = false
-  let t = 0
-  let point = origin
-
-  const denom = gsts.f._3dVectorDotProduct(dir, wallNormal)
-
-  if (Mathf.Abs(denom) >= GSTS_TRAJECTORY_PARALLEL_EPSILON) {
-    const wallToOrigin = gsts.f._3dVectorSubtraction(wallPoint, origin)
-    const tHit = gsts.f._3dVectorDotProduct(wallToOrigin, wallNormal) / denom
-
-    if (tHit > GSTS_TRAJECTORY_EPSILON) {
-      const offset = gsts.f._3dVectorZoom(dir, tHit)
-      point = gsts.f._3dVectorAddition(origin, offset)
-      t = tHit
-      hit = true
-    }
-  }
-
-  return { hit, t, point }
-}
-
 export function gstsServerReflectVec(incident: vec3, normal: vec3): vec3 {
   const dotValue = gsts.f._3dVectorDotProduct(incident, normal)
   const step1 = gsts.f._3dVectorZoom(normal, dotValue)
@@ -102,6 +41,24 @@ function gstsServerUpdateIfNearer(
   let result = current
   if (tHit > GSTS_TRAJECTORY_EPSILON && tHit <= MAX_PREVIEW_DIST && tHit < current.t) {
     result = { hasHit: true, t: tHit, point: hitPoint, wallNormal, hitChess: isChess }
+  }
+  return result
+}
+
+function gstsServerCheckWall(
+  current: GstsTrajectoryResult,
+  origin: vec3,
+  dir: vec3,
+  wallNormal: vec3,
+  wallPoint: vec3
+): GstsTrajectoryResult {
+  let result = current
+  const denom = gsts.f._3dVectorDotProduct(dir, wallNormal)
+  if (Mathf.Abs(denom) >= GSTS_TRAJECTORY_PARALLEL_EPSILON) {
+    const wallToOrigin = gsts.f._3dVectorSubtraction(wallPoint, origin)
+    const tHit = gsts.f._3dVectorDotProduct(wallToOrigin, wallNormal) / denom
+    const hitPoint = gsts.f._3dVectorAddition(origin, gsts.f._3dVectorZoom(dir, tHit))
+    result = gstsServerUpdateIfNearer(current, tHit, hitPoint, wallNormal, false)
   }
   return result
 }
@@ -166,57 +123,45 @@ function gstsServerFindFirstHit(
   return best
 }
 
-function gstsServerCheckWall(
-  current: GstsTrajectoryResult,
-  origin: vec3,
-  dir: vec3,
-  wallNormal: vec3,
-  wallPoint: vec3
-): GstsTrajectoryResult {
-  let result = current
-  const denom = gsts.f._3dVectorDotProduct(dir, wallNormal)
-  if (Mathf.Abs(denom) >= GSTS_TRAJECTORY_PARALLEL_EPSILON) {
-    const wallToOrigin = gsts.f._3dVectorSubtraction(wallPoint, origin)
-    const tHit = gsts.f._3dVectorDotProduct(wallToOrigin, wallNormal) / denom
-    const hitPoint = gsts.f._3dVectorAddition(origin, gsts.f._3dVectorZoom(dir, tHit))
-    result = gstsServerUpdateIfNearer(current, tHit, hitPoint, wallNormal, false)
-  }
-  return result
+function gstsServerSpawnSegment(start: vec3, end: vec3): void {
+  const midX = (start.x + end.x) * 0.5
+  const midY = (start.y + end.y) * 0.5
+  const midZ = (start.z + end.z) * 0.5
+  const midPoint = gsts.f.create3dVector(midX, midY, midZ)
+  gsts.f.createPrefab(
+    Global.trajectoryPrefabId,
+    midPoint,
+    [0, 0, 0],
+    Global.getServerStageEntity(),
+    true,
+    1,
+    [Global.EntityTag.Trajectory]
+  )
 }
 
-export function gstsServerCalcTrajectoryPreview(
+export function gstsServerSpawnTrajectoryForDir(
   origin: vec3,
-  dir: vec3,
+  normalizedDir: vec3,
   chessType: string,
   faction: faction,
   shooterEntity: entity
-): { seg1End: vec3; seg2End: vec3 | null; hitChess: boolean } {
-  const normalizedDir = gsts.f._3dVectorNormalization(dir)
+): void {
   const firstHit = gstsServerFindFirstHit(origin, normalizedDir, chessType, faction, shooterEntity)
 
-  let seg1End = gstsServerGetPreviewMaxPoint(origin, normalizedDir)
-  let seg2End: vec3 | null = null
-  let hitChess = false
-
   if (firstHit.hasHit) {
-    seg1End = firstHit.point
-    if (firstHit.hitChess) {
-      hitChess = true
-    } else {
+    gstsServerSpawnSegment(origin, firstHit.point)
+    if (!firstHit.hitChess) {
       const reflectDir = gstsServerReflectVec(normalizedDir, firstHit.wallNormal)
       const secondHit = gstsServerFindFirstHit(firstHit.point, reflectDir, chessType, faction, shooterEntity)
       if (secondHit.hasHit) {
-        seg2End = secondHit.point
+        gstsServerSpawnSegment(firstHit.point, secondHit.point)
       } else {
-        seg2End = gstsServerGetPreviewMaxPoint(firstHit.point, reflectDir)
+        const seg2End = gsts.f._3dVectorAddition(firstHit.point, gsts.f._3dVectorZoom(reflectDir, MAX_PREVIEW_DIST))
+        gstsServerSpawnSegment(firstHit.point, seg2End)
       }
     }
+  } else {
+    const seg1End = gsts.f._3dVectorAddition(origin, gsts.f._3dVectorZoom(normalizedDir, MAX_PREVIEW_DIST))
+    gstsServerSpawnSegment(origin, seg1End)
   }
-
-  return { seg1End, seg2End, hitChess }
-}
-
-function gstsServerGetPreviewMaxPoint(origin: vec3, dir: vec3): vec3 {
-  const offset = gsts.f._3dVectorZoom(dir, MAX_PREVIEW_DIST)
-  return gsts.f._3dVectorAddition(origin, offset)
 }
