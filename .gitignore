@@ -5,3 +5,15 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+.DS_Store
+.env
+.claude/
+.swarmforge/
+.worktrees/
+swarmtools/
+logs/
+agent_context/
+logbook.json
+swarmforge/scripts/
+tmp/
+pending-messages/
