@@ -1,6 +1,5 @@
 import { g } from 'genshin-ts/runtime/core'
 import * as ChangeControl from '../../ChangeControl'
-import { UIControlGroupStatus } from 'genshin-ts/definitions/enum'
 import { factionBlack, factionRed } from '../../Global'
 
 g.server({

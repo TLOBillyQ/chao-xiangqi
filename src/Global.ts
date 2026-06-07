@@ -1,4 +1,4 @@
-import { faction, ReadonlyDict } from "genshin-ts/runtime/value"
+import { faction } from "genshin-ts/runtime/value"
 
 
 

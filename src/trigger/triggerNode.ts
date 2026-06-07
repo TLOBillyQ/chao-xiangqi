@@ -12,22 +12,8 @@ import { Signal } from '../resources/signals'
 g.server({
   id: 1073741827,
   name:'trigger'
-}).on('whenEnteringCollisionTrigger', (_evt, f) => {
-    //计算法线（即法向量）aw
-    // let enteringEntity = _evt.enteringEntity as entity
-    // let enterPos = f.getEntityLocationAndRotation(enteringEntity).location
-    // let selfEntity = f.getSelfEntity()
-    // let selfPos = f.getEntityLocationAndRotation(selfEntity).location
-    // let vecFa = f._3dVectorSubtraction(selfPos,enterPos)
-    // let moveVec = f.getCustomVariable(selfEntity,"moveVec").asType("vec3")
-    // let reflect‌Vec = gstsCalselfreflect‌Vec(moveVec,vecFa)
-
-    // console.log(reflect‌Vec)
-    // f.stopAndDeleteBasicMotionDevice(selfEntity,"forwardMove",false)
-    // f.addUniformBasicLinearMotionDevice(selfEntity,"reflectMove",3,reflect‌Vec)
-    
+}).on('whenEnteringCollisionTrigger', (_evt, _f) => {
 })
-
 
 //九宫格范围检测
 g.server({
@@ -133,71 +119,6 @@ g.server({
     }
 })
 
-
-
-// g.server({
-//   id: 1073741827,
-//   name:'trigger'
-// }).on('whenEnteringCollisionTrigger', (_evt, f) => {
-//     //计算法线（即法向量）aw
-//     let enteringEntity = _evt.enteringEntity as entity
-//     let selfEntity = f.getSelfEntity()
-
-//     //移除当前移动前定时器
-//     enteringEntity.stopTimer(Global.Tick_MoveActiveTriggerBefore)
-//     selfEntity.stopTimer(Global.Tick_MoveActiveTriggerBefore)
-
-//     let list1 = f.getCustomVariable(enteringEntity,"triggerGuidList").asType("guid_list")
-//     let list2 = f.getCustomVariable(selfEntity,"triggerGuidList").asType("guid_list")
-
-//     let list1GUID = f.queryGuidByEntity(enteringEntity)
-//     let list2GUID = f.queryGuidByEntity(selfEntity)
-
-//     let enterType = enteringEntity.get("棋子类型").asType("str")
-//     let selfType = self.get("棋子类型").asType("str")
-//     let enterTriCount = enteringEntity.get("triggerCount").asType("float")
-//     let selfTriCount = self.get("triggerCount").asType("float")
-//     let enterisStart = enteringEntity.get("isStart").asType("bool")
-//     let selfisStart = self.get("isStart").asType("bool")
-
-//     enteringEntity.set("triggerCount",1)
-//     self.set("triggerCount",1)
-
-//     gstsServerAddMoveEntity(enteringEntity)
-//     gstsServerAddMoveEntity(self)
-
-//     //碰撞时互相检测到对方的方法处理 添加到对方的当前碰撞列表当中
-//     let isCanTrigger = 1
-
-//     if(list1.includes(list2GUID)) isCanTrigger = 0
-//     if(list2.includes(list1GUID)) isCanTrigger = 0
-//     //console.log(isCanTrigger)
-//     if(isCanTrigger == 1){
-//       list1.push(list2GUID)
-//       list2.push(list1GUID)
-//       f.setCustomVariable(enteringEntity,"triggerGuidList",list1)
-//       f.setCustomVariable(selfEntity,"triggerGuidList",list2)
-//       if((enterType =="炮"&& enterTriCount == 0 && enterisStart ) || (selfType =="炮"&& selfTriCount == 0 && selfisStart))
-//       {//
-//       }
-//       else
-//       {
-//        gstsServerCaliImpulse(enteringEntity,selfEntity)
-//       }
-//     }else
-//     {
-//       //console.log("重复碰撞屏蔽")
-//     }
-// })
-
-//离开碰撞时清空各自的列表
-// g.server({
-//   id: 1073741827,
-//   name:'trigger'
-// }).on('whenExitingCollisionTrigger', (_evt, f) => {
-//   self.set<"guid_list">("triggerGuidList",[guid(0)])
-// })
-
 //(弃用)
 g.server({
   id: 1073741827,
@@ -226,13 +147,8 @@ g.server({
 g.server({
   id: 1073741833,
   name:"moveActChange"
-}).on("whenTimerIsTriggered",(_evt, f) => {
+}).on("whenTimerIsTriggered",(_evt, _f) => {
   if(_evt.timerName == Global.Tick_MoveActive) gstsServerMoveChangeTick(Global.deltaMove)
   else if(_evt.timerName == Global.Tick_OutCheck) gstsServerOutCheck(self)
   else if(_evt.timerName == Global.Tick_MoveActiveTriggerBefore ) gstsServerMoveChangeTick(Global.deltaMoveTriggerBefore)
 })
-
-
-
-
-    

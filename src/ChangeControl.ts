@@ -94,7 +94,7 @@ export function gstsServerChangeControl()
             StageEntity.set("canChange",false)
             playerEntity.set("isControl",false)
             gsts.f.modifyGlobalTimer(StageEntity,"红方倒计时",-999)
-            setTimeout((e)=>{
+            setTimeout((_e)=>{
                 StageEntity.set("canChange",true)
                 player(2).set("isControl",true)
                 player(2).setUiControlStatus(Global.timersId.black,UIControlGroupStatus.On)
@@ -117,7 +117,7 @@ export function gstsServerChangeControl()
             gsts.f.modifyGlobalTimer(StageEntity,"黑方倒计时",-999)
             //切换保护 避免短时间内频繁切换导致错误
 
-            setTimeout((e)=>{
+            setTimeout((_e)=>{
                 StageEntity.set("canChange",true)
                 player(1).set("isControl",true)
                 player(1).setUiControlStatus(Global.timersId.red,UIControlGroupStatus.On)
@@ -150,7 +150,7 @@ export function gstsServerChangeControl_Test()
             //切换保护 避免短时间内频繁切换导致错误
             StageEntity.set("canChange",false)
             playerEntity.set("isControl",false)
-            setTimeout((e)=>{
+            setTimeout((_e)=>{
                 StageEntity.set("canChange",true)
                 playerEntity.set("isControl",true)
                 playerEntity.setUiControlStatus(Global.timersId.black,UIControlGroupStatus.On)
@@ -172,7 +172,7 @@ export function gstsServerChangeControl_Test()
             //切换保护 避免短时间内频繁切换导致错误
             StageEntity.set("canChange",false)
             playerEntity.set("isControl",false)
-            setTimeout((e)=>{
+            setTimeout((_e)=>{
                 StageEntity.set("canChange",true)
                 playerEntity.set("isControl",true)
                 playerEntity.setUiControlStatus(Global.timersId.red,UIControlGroupStatus.On)

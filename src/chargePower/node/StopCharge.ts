@@ -1,7 +1,7 @@
 import { g } from 'genshin-ts/runtime/core'
 import { gstsServerSureToMove } from '../../chessEntity/chessObjFunction'
-import { dirPrefabs } from '../../Global'
 import * as Global from '../../Global'
+import { dirPrefabs } from '../../Global'
 import { gstsServerHideUIByChargeStop } from '../../UIControl/ControlUIFunc'
 import { Signal } from '../../resources/signals'
 

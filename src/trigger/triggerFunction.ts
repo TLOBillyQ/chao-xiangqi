@@ -51,10 +51,6 @@ export function gstsServerOutCheck(checkentity:entity)
     (checkentity.pos.x < Global.Wall.topx)||
     (checkentity.pos.x > Global.Wall.floorx))
     {
-        let qiziType = checkentity.get("棋子类型").asType("str")
-        let chessFaction = gsts.f.queryEntityFaction(checkentity)
-        //获取拥有者实体
-        let ownerEntity = checkentity.owner()
         //删除所有运动器
         gsts.f.stopAndDeleteBasicMotionDevice(checkentity,"",true)
         gsts.f.stopTimer(checkentity,Global.Tick_OutCheck)
@@ -86,12 +82,12 @@ export function gstsServerOutCheck(checkentity:entity)
           gsts.f.addTargetOrientedRotationBasedMotionDevice(self,"as",1,gsts.f.directionVectorToRotation(newvec,Vector3.right))
         }
 
-        setTimeout((e)=>{
+        setTimeout((_e)=>{
           //下落效果
           gsts.f.addUniformBasicLinearMotionDevice(checkentity,"draw",2,Vector3.Scale(Vector3.down,3))
           checkentity.playTimedEffects(configId(1199570947),"GI_RootNode",true,true,[0,0,0],[0,0,0],1,true)
         },1000)
-        setTimeout((e)=>{
+        setTimeout((_e)=>{
           //销毁棋子
           //checkentity.activateDisableModelDisplay(false)
           checkentity.destroy()

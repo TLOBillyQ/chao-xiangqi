@@ -5,7 +5,6 @@ g.server({
   name:'playerCreated'
 }).on(
    'whenEntityIsCreated', (_evt, f) => {
-    let entity = self
     //let Faction = f.queryEntityFaction(entity)
     f.startTimer(self,"sendCurStageToOther",true,[3])
     //初始化镜头
@@ -16,6 +15,6 @@ g.server({
 
 g.server({
   id: 1073741828,
-}).on('whenTimerIsTriggered', (_evt, f) => {
+}).on('whenTimerIsTriggered', (_evt, _f) => {
   send("chgPlayerStage")
 })

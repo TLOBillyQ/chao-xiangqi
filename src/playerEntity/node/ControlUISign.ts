@@ -2,7 +2,6 @@ import { g } from 'genshin-ts/runtime/core'
 import { trajectoryPrefabId, EntityTag, gsteServerpieceDirections_red, gsteServerpieceDirections_black, factionBlack } from '../../Global'
 import { UIControlGroupStatus } from 'genshin-ts/definitions/enum'
 import * as UIControl from  '../../UIControlGroupId'
-import { PlayerEntity } from 'genshin-ts/definitions/nodes'
 import { gstsServerSpawnTrajectoryLine } from './playerActive'
 import { Signal } from '../../resources/signals'
 
@@ -24,7 +23,7 @@ g.server({
 g.server({
   id: 1073741844,
   name:"changeDir",
-}).on('whenUiControlGroupIsTriggered', (_evt, f) => {
+}).on('whenUiControlGroupIsTriggered', (_evt, _f) => {
   
   let controlEntity = _evt.eventSourceEntity
   const curChooseChessType = controlEntity.get("curChessType").asType("str")

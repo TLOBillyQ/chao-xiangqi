@@ -1,6 +1,6 @@
 import { g } from 'genshin-ts/runtime/core'
-import { entity, faction, float,ReadonlyDict, vec3 } from 'genshin-ts/runtime/value'
-import { gsteServerpieceDirections_red,gsteServerpieceDirections_black ,gridNormalization,EntityTag,Wall,dirPrefabs, factionRed, factionBlack, trajectoryPrefabId, getServerStageEntity} from '../../Global'
+import { entity, faction, vec3 } from 'genshin-ts/runtime/value'
+import { gsteServerpieceDirections_red,gsteServerpieceDirections_black ,EntityTag,Wall,dirPrefabs, factionRed, factionBlack, trajectoryPrefabId} from '../../Global'
 //import { gstsServerSureToMove } from '../qizi/qizi_move'
 import { PlayerEntity } from 'genshin-ts/definitions/nodes'
 import { gstsServerCanControl } from '../../ChangeControl'
@@ -78,7 +78,6 @@ function gstsServerCreateDirEffect(targetEntity:entity,controlEntity:PlayerEntit
     
       let Normalization = gsts.f._3dVectorNormalization(dirList[i])
       if(dirList[i].y < 0) Deg += 180
-      let createPos = gsts.f.create3dVector(pos.x-Normalization.y,pos.y,pos.z+Normalization.x)
       let rotate = gsts.f.create3dVector(0,Deg,0)
 
       let PrefabId = dirPrefabs.red
@@ -109,22 +108,12 @@ function gstsServerCreateDirEffect(targetEntity:entity,controlEntity:PlayerEntit
 export function gstsServerDestroyOldDirTag()
 {
   let tagPrefabListRed = gsts.f.getEntitiesWithSpecifiedPrefabOnTheField(dirPrefabs.red);
-  if(tagPrefabListRed.length > 0)
-  {
-    let motherEntity = gsts.f.getOwnerEntity(tagPrefabListRed[0])
-    //gsts.f.setScanComponentSActiveScanTagId(motherEntity,1)
-  }
   while(tagPrefabListRed.length > 0)
   {
     gsts.f.destroyEntity(tagPrefabListRed[tagPrefabListRed.length-1])
   }
 
   let tagPrefabListBlack = gsts.f.getEntitiesWithSpecifiedPrefabOnTheField(dirPrefabs.black);
-  if(tagPrefabListBlack.length > 0)
-  {
-    let motherEntity = gsts.f.getOwnerEntity(tagPrefabListBlack[0])
-    //gsts.f.setScanComponentSActiveScanTagId(motherEntity,1)
-  }
   while(tagPrefabListBlack.length > 0)
   {
     gsts.f.destroyEntity(tagPrefabListBlack[tagPrefabListBlack.length-1])

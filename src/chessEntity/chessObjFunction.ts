@@ -1,6 +1,5 @@
 import { PlayerEntity } from 'genshin-ts/definitions/nodes'
-import { g } from 'genshin-ts/runtime/core'
-import type { entity, float, vec3 } from 'genshin-ts/runtime/value'
+import type { entity } from 'genshin-ts/runtime/value'
 
 import { gstsServerAddMoveEntity } from '../ChangeControl'
 import * as Global from '../Global'
@@ -40,7 +39,6 @@ export function gstsServerSureToMove(
   )
 
   let chessType = motherEntity.get('棋子类型').asType('str')
-  let Mass = motherEntity.get('Mass').asType('float')
   let initSpeed = gstsServerGetInitSpeedFor(
     motherEntity,
     chessType,
@@ -67,11 +65,3 @@ export function gstsServerSureToMove(
   gsts.f.startTimer(motherEntity, Global.Tick_MoveActiveTriggerBefore, true, [0.03])
   gsts.f.startTimer(motherEntity, Global.Tick_OutCheck, true, [0.03])
 }
-
-// g.server({
-//   id: 1073741830,
-//   name:'qiziMove'
-// }).on(
-//    'whenEntityIsCreated', (_evt, f) => {
-//     //f.setScanComponentSActiveScanTagId(f.getSelfEntity(),2)
-//    })

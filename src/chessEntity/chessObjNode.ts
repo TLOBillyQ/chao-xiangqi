@@ -6,7 +6,7 @@ import * as Global from '../Global'
 g.server({
   id: 1073741834,
   name:'ChessCreate'
-}).on('whenEntityIsCreated', (_evt, f) => {
+}).on('whenEntityIsCreated', (_evt, _f) => {
     //初始化撞击次数
     self.set("triggerCount",float(0))
     self.set("isStart",false)
@@ -16,7 +16,7 @@ g.server({
 g.server({
   id: 1073741835,
   name:'NineCeilWall'
-}).on('whenOnHitDetectionIsTriggered', (_evt, f) => {
+}).on('whenOnHitDetectionIsTriggered', (_evt, _f) => {
     if(_evt.onHitHurtbox)
     {
         //只有初始对象才能被反弹

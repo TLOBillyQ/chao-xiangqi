@@ -1,10 +1,9 @@
 //import {vec3 } from 'genshin-ts/runtime/value'
 
 import { UIControlGroupStatus } from 'genshin-ts/definitions/enum'
-import type { bool, entity, faction, float, vec3 } from 'genshin-ts/runtime/value'
+import type { entity, faction, vec3 } from 'genshin-ts/runtime/value'
 
 import * as Global from './Global'
-import * as UIControl from './UIControlGroupId'
 
 //三维转二维
 export function gstsServerVec3ToVec2(vector3: vec3) {
@@ -186,12 +185,12 @@ export function gstsServerErrorMsg(msg: string, conplayer: entity, isMine: boole
     conplayer.setUiControlStatus(1073742910n, UIControlGroupStatus.On)
   }
   Global.getServerStageEntity().set('ErrorMsg', msg)
-  setTimeout((e) => {
+  setTimeout((_e) => {
     conplayer.setUiControlStatus(1073742874n, UIControlGroupStatus.Off)
   }, 3000)
 }
 
-export function gstsServerErrorMsgNew(msg: string, conplayer: entity, isMine: boolean) {
+export function gstsServerErrorMsgNew(msg: string, conplayer: entity, _isMine: boolean) {
   conplayer.setUiControlStatus(1073742874n, UIControlGroupStatus.On)
   conplayer.setUiControlStatus(1073742471n, UIControlGroupStatus.On)
   conplayer.setUiControlStatus(1073742872n, UIControlGroupStatus.Off)
@@ -200,7 +199,7 @@ export function gstsServerErrorMsgNew(msg: string, conplayer: entity, isMine: bo
   conplayer.playUiAnimationOnControl(1073742871n)
 
   Global.getServerStageEntity().set('ErrorMsg', msg)
-  setTimeout((e) => {
+  setTimeout((_e) => {
     conplayer.setUiControlStatus(1073742874n, UIControlGroupStatus.Off)
   }, 3000)
 }
@@ -227,7 +226,6 @@ export function gstsServerRealDir(FirstShess: entity, SecondChess: entity) {
 
   let movevec = startchess.get('moveVec').asType('vec3')
   let step1rad = Vector3.Angle(movevec, Vector3.Sub(entChess.pos, startPos))
-  let Angle = gsts.f.radiansToDegrees(step1rad)
   //方向法向量模长
   let fvecMagnitude =
     Vector3.Magnitude(Vector3.Sub(entChess.pos, startPos)) * gsts.f.sineFunction(step1rad)
