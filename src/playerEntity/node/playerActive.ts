@@ -7,11 +7,12 @@ import { gstsServerCanControl } from '../../ChangeControl'
 import { gstsServerActiviteChangeUI, gstsServerActiviteDirUI } from '../../UIControl/ControlUIFunc'
 import { gstsServerVec3ToVec2 } from '../../Tool'
 import * as TrajectoryUtils from '../../chessEntity/TrajectoryUtils'
+import { Signal } from '../../resources/signals'
 
 g.server({
   id: 1073741829,
   name:"getNowQZ",
-}).onSignal('GetQiZi', (_evt, f) => {
+}).onSignal(Signal.GetQiZi, (_evt, f) => {
   //手动替换
   let targetEntity = self.get("ScanEntity").asType("entity")
   //let playerEnt = entityList[1]

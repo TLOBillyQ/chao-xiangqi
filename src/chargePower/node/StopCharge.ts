@@ -3,11 +3,12 @@ import { gstsServerSureToMove } from '../../chessEntity/chessObjFunction'
 import { dirPrefabs } from '../../Global'
 import * as Global from '../../Global'
 import { gstsServerHideUIByChargeStop } from '../../UIControl/ControlUIFunc'
+import { Signal } from '../../resources/signals'
 
 g.server({
   id: 1073741838,
   name: 'StopCharge'
-}).onSignal('StopCharge', (_evt, f) => {
+}).onSignal(Signal.StopCharge, (_evt, f) => {
 
   let entity = _evt.signalSourceEntity.getPlayerEntityToWhichTheCharacterBelongs()
   if(entity == self)

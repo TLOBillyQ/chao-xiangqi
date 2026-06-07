@@ -5,6 +5,7 @@ import * as Global from '../Global'
 import { gstsServerCaliImpulse} from '../Tool'
 import { gstsServerMoveChangeTick, gstsServerOutCheck } from './triggerFunction'
 import { gstsServerAddMoveEntity } from '../ChangeControl'
+import { Signal } from '../resources/signals'
 
 
 
@@ -200,7 +201,7 @@ g.server({
 //(弃用)
 g.server({
   id: 1073741827,
-}).onSignal('MoveForward', (_evt, f) => {
+}).onSignal(Signal.MoveForward, (_evt, f) => {
     let selfEntity = f.getSelfEntity()
     let charct = gsts.f.getAllCharacterEntitiesOfSpecifiedPlayer(
     f.getListOfPlayerEntitiesOnTheField()[0]

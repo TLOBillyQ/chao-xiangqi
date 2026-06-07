@@ -4,11 +4,12 @@ import { UIControlGroupStatus } from 'genshin-ts/definitions/enum'
 import * as UIControl from  '../../UIControlGroupId'
 import { PlayerEntity } from 'genshin-ts/definitions/nodes'
 import { gstsServerSpawnTrajectoryLine } from './playerActive'
+import { Signal } from '../../resources/signals'
 
 g.server({
   id: 1073741841,
   name:"ControlUI"
-}).onSignal('ControlUI', (_evt, f) => {
+}).onSignal(Signal.ControlUI, (_evt, f) => {
     //需要手动修改传入目标
   let targetentity = f.getSelfEntity()
   let enteringTag = f.getEntityUnitTagList(targetentity)[0]
