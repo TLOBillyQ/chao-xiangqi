@@ -1,11 +1,12 @@
 import { g } from 'genshin-ts/runtime/core'
 
+import { Signal } from '../../resources/signals'
 import { gstsServerHideUIByChargeBegin } from '../../UIControl/ControlUIFunc'
 
 g.server({
   id: 1073741839,
   name: 'BeginCharge'
-}).onSignal('BeginCharge', (_evt, _f) => {
+}).onSignal(Signal.BeginCharge, (_evt, _f) => {
   //用于替换
   let entity = _evt.signalSourceEntity.getPlayerEntityToWhichTheCharacterBelongs()
   if (entity == self) {

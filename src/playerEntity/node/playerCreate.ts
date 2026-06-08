@@ -1,5 +1,7 @@
 import { g } from 'genshin-ts/runtime/core'
 
+import { Signal } from '../../resources/signals'
+
 g.server({
   id: 1073741828,
   name: 'playerCreated'
@@ -14,5 +16,5 @@ g.server({
 g.server({
   id: 1073741828
 }).on('whenTimerIsTriggered', (_evt, _f) => {
-  send('chgPlayerStage')
+  send(Signal.chgPlayerStage)
 })

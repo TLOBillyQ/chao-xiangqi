@@ -2,12 +2,13 @@ import { g } from 'genshin-ts/runtime/core'
 
 import { gstsServerSureToMove } from '../../chessEntity/chessObjFunction'
 import { dirPrefabs } from '../../Global'
+import { Signal } from '../../resources/signals'
 import { gstsServerHideUIByChargeStop } from '../../UIControl/ControlUIFunc'
 
 g.server({
   id: 1073741838,
   name: 'StopCharge'
-}).onSignal('StopCharge', (_evt, f) => {
+}).onSignal(Signal.StopCharge, (_evt, f) => {
   let entity = _evt.signalSourceEntity.getPlayerEntityToWhichTheCharacterBelongs()
   if (entity == self) {
     if (entity.get('ischarge').asType('bool')) {

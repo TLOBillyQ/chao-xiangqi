@@ -2,6 +2,7 @@ import { g } from 'genshin-ts/runtime/core'
 
 import * as ChangeControl from '../../ChangeControl'
 import { factionBlack, factionRed } from '../../Global'
+import { Signal } from '../../resources/signals'
 
 g.server({
   id: 1073741843,
@@ -12,7 +13,7 @@ g.server({
       f.getListOfPlayerEntitiesOnTheField(),
       factionBlack
     )[0]
-    if (player.get('ischarge').asType('bool')) send('StopCharge')
+    if (player.get('ischarge').asType('bool')) send(Signal.StopCharge)
     //else ChangeControl.gstsServerChangeControl_Test()
     else ChangeControl.gstsServerChangeControl()
   } else if (_evt.timerName == '红方倒计时' && ChangeControl.gstsServerCanControl() == 1) {

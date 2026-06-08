@@ -14,12 +14,13 @@ import {
   gsteServerpieceDirections_red,
   Wall
 } from '../../Global'
+import { Signal } from '../../resources/signals'
 import { gstsServerActiviteChangeUI, gstsServerActiviteDirUI } from '../../UIControl/ControlUIFunc'
 
 g.server({
   id: 1073741829,
   name: 'getNowQZ'
-}).onSignal('GetQiZi', (_evt, f) => {
+}).onSignal(Signal.GetQiZi, (_evt, f) => {
   //手动替换
   let targetEntity = self.get('ScanEntity').asType('entity')
 

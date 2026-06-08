@@ -2,12 +2,13 @@ import { UIControlGroupStatus } from 'genshin-ts/definitions/enum'
 import { g } from 'genshin-ts/runtime/core'
 
 import { EntityTag } from '../../Global'
+import { Signal } from '../../resources/signals'
 import * as UIControl from '../../UIControlGroupId'
 
 g.server({
   id: 1073741841,
   name: 'ControlUI'
-}).onSignal('ControlUI', (_evt, f) => {
+}).onSignal(Signal.ControlUI, (_evt, f) => {
   //需要手动修改传入目标
   let targetentity = f.getSelfEntity()
   let enteringTag = f.getEntityUnitTagList(targetentity)[0]
