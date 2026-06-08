@@ -4,7 +4,7 @@ import { gstsServerCheckChessMovestage } from './ChangeControl'
 
 g.server({
   id: 1073741842,
-  name: '棋子坐标初始化'
+  name: 'ChessInitGraph'
 }).on('whenEntityIsCreated', (_evt, f) => {
   f.startTimer(self, 'CheckChessMovestage', true, [3])
   self.set('canChange', true)
