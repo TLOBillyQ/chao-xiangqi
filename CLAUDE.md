@@ -7,6 +7,7 @@ This file guides AI to write/modify code and docs in chao-xiangqi (超象棋：�
 - `README_ZH.md`: Chinese template guide and terminology reference when working in Chinese.
 - `docs/EDITOR_BOUNDARIES.md`: English decision rules for code-vs-editor responsibilities.
 - `docs/EDITOR_BOUNDARIES_ZH.md`: Chinese decision rules and preferred editor terminology.
+- `docs/COMPILE_PITFALLS.md` / `docs/COMPILE_PITFALLS_ZH.md`: known compile/inject gotchas (e.g. `g.server` name vs file name, stale dist on rename).
 
 ## Compilation Flow (Debugging)
 1. TS -> `.gs.ts` (node function call form)
