@@ -48,11 +48,3 @@ export function gstsServerHideUIByChargeStop(playerEntity: PlayerEntity) {
   playerEntity.setUiControlStatus(UIControl.changeDir.right, UIControlGroupStatus.Off)
   gstsServerSetDirUiStatus(playerEntity, UIControlGroupStatus.Off)
 }
-
-export function gstsServerShowVictoryDep(playerEntity: PlayerEntity) {
-  playerEntity.setUiControlStatus(UIControl.id_JieSuan, UIControlGroupStatus.On)
-}
-
-export function gstsServerShowDefeatDep(playerEntity: PlayerEntity) {
-  playerEntity.setUiControlStatus(UIControl.id_JieSuan, UIControlGroupStatus.On)
-}

@@ -1,16 +1,17 @@
 import { g } from 'genshin-ts/runtime/core'
-import { gstsServerActiviteDirUI, gstsServerHideUIByChargeBegin } from '../../UIControl/ControlUIFunc'
+
+import { gstsServerHideUIByChargeBegin } from '../../UIControl/ControlUIFunc'
+
 g.server({
   id: 1073741839,
-  name:"BeginCharge",
-}).onSignal('BeginCharge', (_evt, f) => {
+  name: 'BeginCharge'
+}).onSignal('BeginCharge', (_evt, _f) => {
   //用于替换
   let entity = _evt.signalSourceEntity.getPlayerEntityToWhichTheCharacterBelongs()
-  if(entity == self)
-  {
+  if (entity == self) {
     //UI控制
     gstsServerHideUIByChargeBegin(self)
-    self.set("ischarge",true)
-    self.startTimer("charge",true,[0.03])
+    self.set('ischarge', true)
+    self.startTimer('charge', true, [0.03])
   }
 })
