@@ -8,7 +8,7 @@ const config: GstsConfig = {
   inject: {
     playerId: 342482779,
     mapId: 1073741826,
-    nodeGraphId: 1073741825
+    nodeGraphId: 1073741842
   }
 }
 
