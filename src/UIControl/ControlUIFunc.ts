@@ -16,6 +16,8 @@ export function gstsServerActiviteChangeUI(playerEntity: PlayerEntity) {
   playerEntity.set('curDirIndex', 0)
   playerEntity.setUiControlStatus(UIControl.changeDir.left, UIControlGroupStatus.On)
   playerEntity.setUiControlStatus(UIControl.changeDir.right, UIControlGroupStatus.On)
+  //激活蓄力按钮
+  playerEntity.setUiControlStatus(UIControl.chargeBegin, UIControlGroupStatus.On)
 }
 
 export function gstsServerActiviteDirUI(playerEntity: PlayerEntity, chessType: string) {
