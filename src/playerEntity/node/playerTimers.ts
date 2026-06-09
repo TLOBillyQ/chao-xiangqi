@@ -21,7 +21,7 @@ g.server({
       f.getListOfPlayerEntitiesOnTheField(),
       factionRed
     )[0]
-    if (player.get('ischarge').asType('bool')) send('StopCharge')
+    if (player.get('ischarge').asType('bool')) send(Signal.StopCharge)
     //else ChangeControl.gstsServerChangeControl_Test()
     else ChangeControl.gstsServerChangeControl()
   }

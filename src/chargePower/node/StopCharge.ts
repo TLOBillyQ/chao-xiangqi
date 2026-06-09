@@ -9,12 +9,18 @@ g.server({
   id: 1073741838,
   name: 'StopCharge'
 }).onSignal(Signal.StopCharge, (_evt, f) => {
-  let entity = _evt.signalSourceEntity.getPlayerEntityToWhichTheCharacterBelongs()
+  let isForSelf = false
+  if (_evt.signalSourceEntity == self) {
+    isForSelf = true
+  } else {
+    let entity = _evt.signalSourceEntity.getPlayerEntityToWhichTheCharacterBelongs()
+    if (entity == self) isForSelf = true
+  }
   print(str('CHARGE_STOP_RECV'))
-  if (entity == self) {
+  if (isForSelf) {
     print(str('CHARGE_STOP_SELF'))
-    if (entity.get('ischarge').asType('bool')) {
-      let powerPercent = f.getCustomVariable(entity, 'chargePower').asType('float') / 100
+    if (self.get('ischarge').asType('bool')) {
+      let powerPercent = f.getCustomVariable(self, 'chargePower').asType('float') / 100
       print(str(powerPercent))
       //send('MoveForward')
 
@@ -58,9 +64,9 @@ g.server({
       let updateStep = step + 1
       self.set('step', updateStep)
 
-      f.setCustomVariable(entity, 'ischarge', false)
-      f.stopTimer(entity, 'charge')
-      f.setCustomVariable(entity, 'chargePower', 0)
+      f.setCustomVariable(self, 'ischarge', false)
+      f.stopTimer(self, 'charge')
+      f.setCustomVariable(self, 'chargePower', 0)
 
       //UI控制
       gstsServerHideUIByChargeStop(self)

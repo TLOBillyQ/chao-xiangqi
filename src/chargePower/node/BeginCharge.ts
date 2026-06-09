@@ -8,9 +8,15 @@ g.server({
   name: 'BeginCharge'
 }).onSignal(Signal.BeginCharge, (_evt, _f) => {
   //用于替换
-  let entity = _evt.signalSourceEntity.getPlayerEntityToWhichTheCharacterBelongs()
+  let isForSelf = false
+  if (_evt.signalSourceEntity == self) {
+    isForSelf = true
+  } else {
+    let entity = _evt.signalSourceEntity.getPlayerEntityToWhichTheCharacterBelongs()
+    if (entity == self) isForSelf = true
+  }
   print(str('CHARGE_BEGIN_RECV'))
-  if (entity == self) {
+  if (isForSelf) {
     print(str('CHARGE_BEGIN_SELF'))
     //UI控制
     gstsServerHideUIByChargeBegin(self)

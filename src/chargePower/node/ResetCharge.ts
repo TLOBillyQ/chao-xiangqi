@@ -7,8 +7,14 @@ g.server({
   id: 1073741837,
   name: 'ResetCharge'
 }).onSignal(Signal.ResetCharge, (_evt, f) => {
-  let entity = _evt.signalSourceEntity.getPlayerEntityToWhichTheCharacterBelongs()
-  if (entity == self) {
+  let isForSelf = false
+  if (_evt.signalSourceEntity == self) {
+    isForSelf = true
+  } else {
+    let entity = _evt.signalSourceEntity.getPlayerEntityToWhichTheCharacterBelongs()
+    if (entity == self) isForSelf = true
+  }
+  if (isForSelf) {
     let playentity = f.getSelfEntity()
     f.setCustomVariable(playentity, 'chargePower', 0)
   }

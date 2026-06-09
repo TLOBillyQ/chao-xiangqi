@@ -64,6 +64,17 @@ export function gstsServerConfirmSettle() {
   gsts.f.settleStage()
 }
 
+export function gstsServerRefreshBothJoined() {
+  let players = gsts.f.getListOfPlayerEntitiesOnTheField()
+  let stage = getServerStageEntity()
+  if (players.length > 1) {
+    if (!stage.get('bothJoined').asType('bool')) {
+      stage.set('bothJoined', true)
+      print(str('PROBE_BOTH_JOINED'))
+    }
+  }
+}
+
 /**
  * 检测是否有玩家中途退出：在场玩家由 2 减为 1 时，剩余一方判胜并结算。
  *
@@ -80,7 +91,10 @@ export function gstsServerSettleIfPlayerLeft() {
   // 记录本局是否曾满员(2人)：单人试玩人数恒为1，且本事件对任意实体销毁(含吃子)都触发，
   // 必须「曾经2人、现在1人」才算有人离场，否则会在开局/吃子时误判结算。
   if (players.length > 1) {
-    stage.set('bothJoined', true)
+    if (!stage.get('bothJoined').asType('bool')) {
+      stage.set('bothJoined', true)
+      print(str('PROBE_BOTH_JOINED'))
+    }
   }
   if (players.length == 1) {
     if (stage.get('bothJoined').asType('bool')) {
