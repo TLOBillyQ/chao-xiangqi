@@ -9,7 +9,9 @@ g.server({
 }).onSignal(Signal.BeginCharge, (_evt, _f) => {
   //用于替换
   let entity = _evt.signalSourceEntity.getPlayerEntityToWhichTheCharacterBelongs()
+  print(str('CHARGE_BEGIN_RECV'))
   if (entity == self) {
+    print(str('CHARGE_BEGIN_SELF'))
     //UI控制
     gstsServerHideUIByChargeBegin(self)
     self.set('ischarge', true)

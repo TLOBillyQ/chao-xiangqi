@@ -10,9 +10,12 @@ g.server({
   name: 'StopCharge'
 }).onSignal(Signal.StopCharge, (_evt, f) => {
   let entity = _evt.signalSourceEntity.getPlayerEntityToWhichTheCharacterBelongs()
+  print(str('CHARGE_STOP_RECV'))
   if (entity == self) {
+    print(str('CHARGE_STOP_SELF'))
     if (entity.get('ischarge').asType('bool')) {
       let powerPercent = f.getCustomVariable(entity, 'chargePower').asType('float') / 100
+      print(str(powerPercent))
       //send('MoveForward')
 
       //销毁自身所有方向实体
@@ -61,6 +64,8 @@ g.server({
 
       //UI控制
       gstsServerHideUIByChargeStop(self)
+    } else {
+      print(str('CHARGE_STOP_NOTCHARGING'))
     }
   }
 })
