@@ -14,15 +14,15 @@ g.server({
       factionBlack
     )[0]
     if (player.get('ischarge').asType('bool')) send(Signal.StopCharge)
-    //else ChangeControl.gstsServerChangeControl_Test()
-    else ChangeControl.gstsServerChangeControl()
+    //else ChangeControl.gstsServerSwitchTurn_Test()
+    else ChangeControl.gstsServerSwitchTurn()
   } else if (_evt.timerName == '红方倒计时' && ChangeControl.gstsServerCanControl() == 1) {
     let player = f.getEntityListBySpecifiedFaction(
       f.getListOfPlayerEntitiesOnTheField(),
       factionRed
     )[0]
     if (player.get('ischarge').asType('bool')) send(Signal.StopCharge)
-    //else ChangeControl.gstsServerChangeControl_Test()
-    else ChangeControl.gstsServerChangeControl()
+    //else ChangeControl.gstsServerSwitchTurn_Test()
+    else ChangeControl.gstsServerSwitchTurn()
   }
 })

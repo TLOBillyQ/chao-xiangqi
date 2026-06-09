@@ -16,21 +16,17 @@ export function gstsServerVec3ToVec2(vector3: vec3) {
  * @returns
  */
 
-export function gstsCalselfreflectVec(enterVec: vec3, vecFa: vec3): vec3 {
+export function gstsServerCalculateReflectVector(enterVec: vec3, vecFa: vec3): vec3 {
   //let R = enterVec- 2 (enterVec.vecFa) vecFa
-  // eslint-disable-next-line gsts/no-gsts-f-outside-server
   const step1 = gsts.f._3dVectorDotProduct(enterVec, vecFa)
-  // eslint-disable-next-line gsts/no-gsts-f-outside-server
   const step2 = gsts.f._3dVectorZoom(vecFa, step1)
-  // eslint-disable-next-line gsts/no-gsts-f-outside-server
   const step3 = gsts.f._3dVectorZoom(step2, 2)
-  // eslint-disable-next-line gsts/no-gsts-f-outside-server
   const reflectVec = gsts.f._3dVectorSubtraction(enterVec, step3)
 
   return reflectVec
 }
 
-export function gstsServerCaliImpulse(entity_1: entity, entity_2: entity) {
+export function gstsServerCalculateImpulse(entity_1: entity, entity_2: entity) {
   let enterPos = gsts.f.getEntityLocationAndRotation(entity_1).location
   let selfPos = gsts.f.getEntityLocationAndRotation(entity_2).location
 
@@ -177,25 +173,25 @@ export function gstsServerErrorMsg(msg: string, conplayer: entity, isMine: boole
 
 /**
  * 获取真实碰撞点坐标
- * @param FirstShess
- * @param SecondChess
+ * @param firstChess
+ * @param secondChess
  * @returns
  */
-export function gstsServerRealDir(FirstShess: entity, SecondChess: entity) {
+export function gstsServerRealDir(firstChess: entity, secondChess: entity) {
   let startPos = Global.getServerStageEntity()
     .get('curPlayer')
     .asType('entity')
     .get('startPos')
     .asType('vec3')
-  let isStart = FirstShess.get('isStart').asType('bool')
-  let startchess = FirstShess
-  let entChess = SecondChess
+  let isStart = firstChess.get('isStart').asType('bool')
+  let startChess = firstChess
+  let entChess = secondChess
   if (!isStart) {
-    startchess = SecondChess
-    entChess = FirstShess
+    startChess = secondChess
+    entChess = firstChess
   }
 
-  let movevec = startchess.get('moveVec').asType('vec3')
+  let movevec = startChess.get('moveVec').asType('vec3')
   let step1rad = Vector3.Angle(movevec, Vector3.Sub(entChess.pos, startPos))
   let _Angle = gsts.f.radiansToDegrees(step1rad)
   //方向法向量模长

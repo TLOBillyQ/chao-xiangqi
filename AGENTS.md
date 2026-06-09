@@ -27,6 +27,9 @@
 - When responding in Chinese, prefer the wording and domain terms from `README_ZH.md` and `docs/EDITOR_BOUNDARIES_ZH.md`.
 - Update `entries` when adding new entry files.
 - Entry events use `g.server({ id }).on(...)`; same ID entries merge automatically.
+- The `name:` field of `g.server({ id, name })` is an **editor contract, not a cosmetic label**: the gsts injector writes it only on the first injection and never updates it afterwards. Do not rename it from code alone — see "gsts Injector Semantics" in `docs/EDITOR_BOUNDARIES{,_ZH}.md`.
+- `src/resources/signals.ts` and `src/resources/prefabs.ts` are auto-regenerated on every build. Hand-renames of their TS constant names / keys will be overwritten — change them via the editor-side signal manager / prefab registry instead.
+- `npm run build` never prunes orphaned node graphs from `.gil`. To rename or remove injected nodes, use the editor UI (see "Safe Rename Workflow for Node Graphs" in `docs/EDITOR_BOUNDARIES{,_ZH}.md`).
 - `gstsServer*` must be top-level and only allow a single trailing `return`.
 - Avoid Promise/async/recursion/JSON/Object in graph scope.
 - Conditions must be `boolean`; use `bool(...)` when needed.

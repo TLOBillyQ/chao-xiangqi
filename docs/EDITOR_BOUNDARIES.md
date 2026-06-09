@@ -41,6 +41,22 @@ Language note:
 - Shop flow is not "open from nothing". It requires editor-authored currency, shop templates, backpack support, and a shop component.
 - If using standard attack flow, authored ability units are required. If those are missing, code may need a simpler fallback such as direct HP loss.
 
+## gsts Injector Semantics (`.gia` → `.gil`)
+- The gsts injector matches existing node-graph entries in the `.gil` by their numeric `id` (the `g.server({ id })` value), not by the cosmetic `name` field.
+- On re-injection, the injector updates the node body (nodes, connections, variables) of the matched entry, but it **does not update the stored `name` field**. The name seen in the editor is whatever was written on the *first* injection.
+- Renaming `name: 'oldX'` → `name: 'newX'` in source code therefore has **no effect in the editor**: the `.gil` will keep showing `_GSTS_oldX`.
+- The injector is additive-only. Nodes that were removed from source long ago remain in the `.gil` as orphans (e.g. `_GSTS_StagePanel`, `_GSTS_main`, `_GSTS_chessDestroy`). The CLI has no `clean` / `purge` subcommand; `npm run build` never prunes.
+- `src/resources/signals.ts` and `src/resources/prefabs.ts` are **auto-regenerated** by the build extractor from the editor-side sandbox signal manager and prefab registry. Hand-edits to TS constant names or keys in those files will be overwritten on the next build.
+- The `name` field of `g.server({...})` must therefore be treated as an **editor contract**: set it once, then never rename from code alone.
+
+## Safe Rename Workflow for Node Graphs
+To rename a node graph that is already injected into a `.gil`:
+
+1. **Option A — editor-driven rename:** open the `.gil` in the game editor and rename the node in the node-graph panel. Optionally update the source `name:` field to match afterwards (purely for code readability; the editor value is authoritative).
+2. **Option B — delete-then-recreate:** delete the old node in the editor UI, then rebuild (`npm run build`) so the `.gia` re-injects under the new name. Verify the old name is gone and the new one appears in the `.gil` before continuing.
+3. Never rely on `npm run build` alone to rename or prune nodes — it will neither update stored names nor remove orphaned entries.
+4. After either option, run a smoke test in the editor (attach signals, trigger events, verify timers fire) — the numeric `id` binding is stable, but any editor-side reference by name (signals, UI hooks, other nodes) must also be updated manually.
+
 ## AI Working Rules
 - For any feature request, separate the answer into:
   - code changes

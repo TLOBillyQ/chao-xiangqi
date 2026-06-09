@@ -47,17 +47,16 @@ export function gstsServerOutCheck(checkentity: entity) {
     checkentity.pos.z < Global.Wall.leftz ||
     checkentity.pos.z > Global.Wall.rightz ||
     checkentity.pos.x < Global.Wall.topx ||
-    checkentity.pos.x > Global.Wall.floorx
+    checkentity.pos.x > Global.Wall.bottomX
   ) {
     //幂等保护：出界检测定时器(0.03s循环)在棋子3秒后销毁前可能反复进入本分支，
     //同一枚子只处理一次出界，避免重复结算/重复落子动画/重复销毁。
-    if (checkentity.get('isOut').asType('bool')) {
-    } else {
+    if (!checkentity.get('isOut').asType('bool')) {
       checkentity.set('isOut', true)
-      let _qiziType = checkentity.get('棋子类型').asType('str')
+      let _pieceType = checkentity.get('棋子类型').asType('str')
       let _chessFaction = gsts.f.queryEntityFaction(checkentity)
       //将/帅被吃（出界）即终局：记录是否为王、以及被吃方是否红方
-      let isKing = _qiziType == '帅' || _qiziType == '将'
+      let isKing = _pieceType == '帅' || _pieceType == '将'
       let redIsLoser = _chessFaction == Global.factionRed
       //获取拥有者实体
       let _ownerEntity = checkentity.owner()
@@ -107,7 +106,7 @@ export function gstsServerOutCheck(checkentity: entity) {
         )
       }
 
-      if (checkentity.pos.x > Global.Wall.floorx) {
+      if (checkentity.pos.x > Global.Wall.bottomX) {
         //下侧掉落
         const newvec = gsts.f._3dVectorRotation(
           gsts.f.create3dVector(checkentity.rotation.y, 0, 0),

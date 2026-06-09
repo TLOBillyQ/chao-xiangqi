@@ -7,13 +7,13 @@ import { gstsServerErrorMsg as ErrorMsg } from './Tool'
 /**
  * 实时检测棋子状态
  */
-export function gstsServerCheckChessMovestage() {
+export function gstsServerCheckPieceMovementState() {
   let moveList = self.get('moveList').asType('entity_list')
   for (let i = 0; i < moveList.length; i++) {
     if (Vector3.Magnitude(moveList[i].get('moveVec').asType('vec3')) < 0.1) {
       gsts.f.removeValueFromList(moveList, i)
       self.set('moveList', moveList)
-      if (moveList.length <= 0) gstsServerChangeControl()
+      if (moveList.length <= 0) gstsServerSwitchTurn()
       break
     }
   }
@@ -47,7 +47,7 @@ export function gstsServerCanControl(): number {
   return isCan
 }
 
-export function gstsServerChangeControl() {
+export function gstsServerSwitchTurn() {
   let StageEntity = Global.getServerStageEntity()
   let playerEntity = StageEntity.get('curPlayer').asType('entity')
   let Faction = gsts.f.queryEntityFaction(playerEntity)

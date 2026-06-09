@@ -3,7 +3,7 @@ import { PlayerEntity } from 'genshin-ts/definitions/nodes'
 
 import * as UIControl from '../UIControlGroupId'
 
-function gstsServerSetDirUiStatus(playerEntity: PlayerEntity, status: UIControlGroupStatus) {
+function gstsServerSetDirectionUiStatus(playerEntity: PlayerEntity, status: UIControlGroupStatus) {
   for (let i = 0; i < UIControl.dirContrlId.车.length; i++) {
     playerEntity.setUiControlStatus(UIControl.dirContrlId.车[idx(i)], status)
   }
@@ -12,7 +12,7 @@ function gstsServerSetDirUiStatus(playerEntity: PlayerEntity, status: UIControlG
   }
 }
 
-export function gstsServerActiviteChangeUI(playerEntity: PlayerEntity) {
+export function gstsServerActivateSwitchUI(playerEntity: PlayerEntity) {
   playerEntity.set('curDirIndex', 0)
   playerEntity.setUiControlStatus(UIControl.changeDir.left, UIControlGroupStatus.On)
   playerEntity.setUiControlStatus(UIControl.changeDir.right, UIControlGroupStatus.On)
@@ -20,8 +20,8 @@ export function gstsServerActiviteChangeUI(playerEntity: PlayerEntity) {
   playerEntity.setUiControlStatus(UIControl.chargeBegin, UIControlGroupStatus.Off)
 }
 
-export function gstsServerActiviteDirUI(playerEntity: PlayerEntity, chessType: string) {
-  gstsServerSetDirUiStatus(playerEntity, UIControlGroupStatus.Off)
+export function gstsServerActivateDirectionUI(playerEntity: PlayerEntity, chessType: string) {
+  gstsServerSetDirectionUiStatus(playerEntity, UIControlGroupStatus.Off)
 
   let dirList = UIControl.dirContrlId.车
   if (chessType == '马') dirList = UIControl.dirContrlId.马
@@ -37,16 +37,16 @@ export function gstsServerActiviteDirUI(playerEntity: PlayerEntity, chessType: s
 
 export function gstsServerHideUIByChargeBegin(playerEntity: PlayerEntity) {
   playerEntity.setUiControlStatus(UIControl.chargeBegin, UIControlGroupStatus.Off)
-  playerEntity.setUiControlStatus(UIControl.chargeJinDu, UIControlGroupStatus.On)
+  playerEntity.setUiControlStatus(UIControl.chargeProgress, UIControlGroupStatus.On)
   playerEntity.setUiControlStatus(UIControl.changeDir.left, UIControlGroupStatus.Off)
   playerEntity.setUiControlStatus(UIControl.changeDir.right, UIControlGroupStatus.Off)
-  gstsServerSetDirUiStatus(playerEntity, UIControlGroupStatus.Off)
+  gstsServerSetDirectionUiStatus(playerEntity, UIControlGroupStatus.Off)
 }
 
 export function gstsServerHideUIByChargeStop(playerEntity: PlayerEntity) {
   playerEntity.setUiControlStatus(UIControl.chargeBegin, UIControlGroupStatus.Off)
-  playerEntity.setUiControlStatus(UIControl.chargeJinDu, UIControlGroupStatus.Off)
+  playerEntity.setUiControlStatus(UIControl.chargeProgress, UIControlGroupStatus.Off)
   playerEntity.setUiControlStatus(UIControl.changeDir.left, UIControlGroupStatus.Off)
   playerEntity.setUiControlStatus(UIControl.changeDir.right, UIControlGroupStatus.Off)
-  gstsServerSetDirUiStatus(playerEntity, UIControlGroupStatus.Off)
+  gstsServerSetDirectionUiStatus(playerEntity, UIControlGroupStatus.Off)
 }

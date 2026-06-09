@@ -6,7 +6,7 @@ import * as Global from '../Global'
 import { gstsServerVec3ToVec2 } from '../Tool'
 
 //选定方向后移动
-export function gstsServerSureToMove(
+export function gstsServerConfirmAndMovePiece(
   dirEntity: entity,
   powerPercent: number,
   curPlayer: PlayerEntity
@@ -38,7 +38,7 @@ export function gstsServerSureToMove(
     configId(10010010)
   )
 
-  let chessType = motherEntity.get('棋子类型').asType('str')
+  let pieceType = motherEntity.get('棋子类型').asType('str')
   let _Mass = motherEntity.get('Mass').asType('float')
 
   let initSpeed = motherEntity.get('initSpeed').asType('float')
@@ -47,13 +47,13 @@ export function gstsServerSureToMove(
 
   //兵过河后 初速度会变化
   if (Faction == Global.factionRed) {
-    if (pos.x < Global.Wall.center && chessType == '兵') {
+    if (pos.x < Global.Wall.center && pieceType == '兵') {
       initSpeed = 25
     }
   }
 
   if (Faction == Global.factionBlack) {
-    if (pos.x > Global.Wall.center && chessType == '兵') {
+    if (pos.x > Global.Wall.center && pieceType == '兵') {
       initSpeed = 25
     }
   }
@@ -72,11 +72,3 @@ export function gstsServerSureToMove(
   gsts.f.startTimer(motherEntity, Global.Tick_MoveActiveTriggerBefore, true, [0.03])
   gsts.f.startTimer(motherEntity, Global.Tick_OutCheck, true, [0.03])
 }
-
-// g.server({
-//   id: 1073741830,
-//   name:'qiziMove'
-// }).on(
-//    'whenEntityIsCreated', (_evt, f) => {
-//     //f.setScanComponentSActiveScanTagId(f.getSelfEntity(),2)
-//    })

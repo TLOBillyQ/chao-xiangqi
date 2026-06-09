@@ -1,5 +1,3 @@
-//import { gstsServerSureToMove } from '../qizi/qizi_move'
-
 import { PlayerEntity } from 'genshin-ts/definitions/nodes'
 import { g } from 'genshin-ts/runtime/core'
 import type { entity } from 'genshin-ts/runtime/value'
@@ -10,17 +8,20 @@ import {
   EntityTag,
   factionBlack,
   factionRed,
-  gsteServerpieceDirections_black,
-  gsteServerpieceDirections_red,
+  gstsServerBlackPieceDirections,
+  gstsServerRedPieceDirections,
   Wall
 } from '../../Global'
 import { Signal } from '../../resources/signals'
-import { gstsServerActiviteChangeUI, gstsServerActiviteDirUI } from '../../UIControl/ControlUIFunc'
+import {
+  gstsServerActivateDirectionUI,
+  gstsServerActivateSwitchUI
+} from '../../UIControl/ControlUIFunc'
 
 g.server({
-  id: 1073741829,
-  name: 'getNowQZ'
-}).onSignal(Signal.GetQiZi, (_evt, f) => {
+  id: 1073741852,
+  name: 'getCurrentPiece'
+}).onSignal(Signal.GetPiece, (_evt, f) => {
   //手动替换
   let targetEntity = self.get('ScanEntity').asType('entity')
 
@@ -29,21 +30,21 @@ g.server({
     if (gstsServerCanControl() == 1) {
       let enteringTag = f.getEntityUnitTagList(targetEntity)[0]
       //筛选到棋子
-      if (enteringTag == EntityTag.QiZi) gstsServerCreateDirEffect(targetEntity, self)
+      if (enteringTag == EntityTag.Piece) gstsServerCreateDirectionIndicators(targetEntity, self)
       //方向标签
-      //else if (enteringTag == EntityTag.Dir) gstsServerSureToMove(targetEntity)
+      //else if (enteringTag == EntityTag.Dir) gstsServerConfirmAndMovePiece(targetEntity)
     }
   }
 })
 
 //创建方向控件 参数1 目标棋子实体 参数2 玩家实体
-function gstsServerCreateDirEffect(targetEntity: entity, controlEntity: PlayerEntity) {
+function gstsServerCreateDirectionIndicators(targetEntity: entity, controlEntity: PlayerEntity) {
   //先把旧的扫描指示销毁
-  gstsServerDestroyOldDirTag()
+  gstsServerDestroyOldDirectionMarkers()
   //屏蔽当前选中棋子的扫描
 
   let Faction = gsts.f.queryEntityFaction(targetEntity)
-  let qiziKey = gsts.f.getCustomVariable(targetEntity, '棋子类型').asType('str')
+  let pieceKey = gsts.f.getCustomVariable(targetEntity, '棋子类型').asType('str')
 
   let pos = gsts.f.getEntityLocationAndRotation(targetEntity).location
 
@@ -52,17 +53,17 @@ function gstsServerCreateDirEffect(targetEntity: entity, controlEntity: PlayerEn
 
   //不同阵营读取字典不同
   if (Faction == factionRed) {
-    if (pos.x < Wall.center && qiziKey == '兵') {
-      qiziKey = '兵过河'
+    if (pos.x < Wall.center && pieceKey == '兵') {
+      pieceKey = '兵过河'
     }
-    dirList = gsteServerpieceDirections_red(qiziKey)
+    dirList = gstsServerRedPieceDirections(pieceKey)
   }
 
   if (Faction == factionBlack) {
-    if (pos.x > Wall.center && qiziKey == '兵') {
-      qiziKey = '兵过河'
+    if (pos.x > Wall.center && pieceKey == '兵') {
+      pieceKey = '兵过河'
     }
-    dirList = gsteServerpieceDirections_black(qiziKey)
+    dirList = gstsServerBlackPieceDirections(pieceKey)
   }
 
   for (let i = 0; i < dirList.length; i++) {
@@ -79,7 +80,7 @@ function gstsServerCreateDirEffect(targetEntity: entity, controlEntity: PlayerEn
       PrefabId = dirPrefabs.black
     }
     //新增玩家选中的棋子类型变量
-    self.set('curChessType', qiziKey)
+    self.set('curChessType', pieceKey)
     self.set('curChooseChess', targetEntity)
 
     let e = gsts.f.createPrefab(PrefabId, pos, rotate, targetEntity, true, 1, [EntityTag.Dir])
@@ -91,13 +92,13 @@ function gstsServerCreateDirEffect(targetEntity: entity, controlEntity: PlayerEn
   //controlEntity.setUiControlStatus(1073741846n,UIControlGroupStatus.On)
   //控件管理
   //激活控件方向选择
-  gstsServerActiviteChangeUI(controlEntity)
+  gstsServerActivateSwitchUI(controlEntity)
   //激活方向
-  gstsServerActiviteDirUI(controlEntity, qiziKey)
+  gstsServerActivateDirectionUI(controlEntity, pieceKey)
 }
 
 //销毁旧的棋子扫描
-export function gstsServerDestroyOldDirTag() {
+export function gstsServerDestroyOldDirectionMarkers() {
   let tagPrefabListRed = gsts.f.getEntitiesWithSpecifiedPrefabOnTheField(dirPrefabs.red)
   if (tagPrefabListRed.length > 0) {
     let _motherEntity = gsts.f.getOwnerEntity(tagPrefabListRed[0])

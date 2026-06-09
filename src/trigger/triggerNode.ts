@@ -3,7 +3,7 @@ import { entity } from 'genshin-ts/runtime/value'
 
 import { gstsServerAddMoveEntity } from '../ChangeControl'
 import * as Global from '../Global'
-import { gstsServerCaliImpulse } from '../Tool'
+import { gstsServerCalculateImpulse } from '../Tool'
 import { gstsServerMoveChangeTick, gstsServerOutCheck } from './triggerFunction'
 
 //九宫格范围检测
@@ -45,8 +45,8 @@ g.server({
     let list1 = f.getCustomVariable(enteringEntity, 'triggerGuidList').asType('entity_list')
     let list2 = f.getCustomVariable(selfEntity, 'triggerGuidList').asType('entity_list')
 
-    let enterType = enteringEntity.get('棋子类型').asType('str')
-    let selfType = self.get('棋子类型').asType('str')
+    let enterPieceType = enteringEntity.get('棋子类型').asType('str')
+    let selfPieceType = self.get('棋子类型').asType('str')
     let enterTriCount = enteringEntity.get('triggerCount').asType('float')
     let selfTriCount = self.get('triggerCount').asType('float')
     let enterisStart = enteringEntity.get('isStart').asType('bool')
@@ -81,7 +81,7 @@ g.server({
       list2.push(enteringEntity)
       f.setCustomVariable(enteringEntity, 'triggerGuidList', list1)
       f.setCustomVariable(selfEntity, 'triggerGuidList', list2)
-      if (enterType == '炮' && enterTriCount == 0 && enterisStart) {
+      if (enterPieceType == '炮' && enterTriCount == 0 && enterisStart) {
         //炮的初始加速度
         let baseVec = Vector3.Normalize(enteringEntity.get('moveVec').asType('vec3'))
         //获取现在的速度*1.2
@@ -104,7 +104,7 @@ g.server({
         gsts.f.addUniformBasicLinearMotionDevice(enteringEntity, 'forwardMove', 99, moveVec)
         //增加摩擦力影响速度变化
         gsts.f.startTimer(enteringEntity, Global.Tick_MoveActive, true, [0.03])
-      } else if (selfType == '炮' && selfTriCount == 0 && selfisStart) {
+      } else if (selfPieceType == '炮' && selfTriCount == 0 && selfisStart) {
         //炮的初始加速度
         let baseVec = Vector3.Normalize(self.get('moveVec').asType('vec3'))
         //获取现在的速度*1.2
@@ -124,7 +124,7 @@ g.server({
         //增加摩擦力影响速度变化
         gsts.f.startTimer(self, Global.Tick_MoveActive, true, [0.03])
       } else {
-        gstsServerCaliImpulse(enteringEntity, selfEntity)
+        gstsServerCalculateImpulse(enteringEntity, selfEntity)
       }
     }
   }

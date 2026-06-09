@@ -1,6 +1,6 @@
 import { g } from 'genshin-ts/runtime/core'
 
-import { gstsServerSureToMove } from '../../chessEntity/chessObjFunction'
+import { gstsServerConfirmAndMovePiece } from '../../chessEntity/chessObjFunction'
 import { dirPrefabs } from '../../Global'
 import { Signal } from '../../resources/signals'
 import { gstsServerHideUIByChargeStop } from '../../UIControl/ControlUIFunc'
@@ -30,7 +30,11 @@ g.server({
           tagPrefabListRed[tagPrefabListRed.length - 1].get('dirUIIndex').asType('float')
         ) {
           //通知棋子移动
-          gstsServerSureToMove(tagPrefabListRed[tagPrefabListRed.length - 1], powerPercent, self)
+          gstsServerConfirmAndMovePiece(
+            tagPrefabListRed[tagPrefabListRed.length - 1],
+            powerPercent,
+            self
+          )
         }
         gsts.f.destroyEntity(tagPrefabListRed[tagPrefabListRed.length - 1])
       }
@@ -42,7 +46,7 @@ g.server({
           tagPrefabListBlack[tagPrefabListBlack.length - 1].get('dirUIIndex').asType('float')
         ) {
           //通知棋子移动
-          gstsServerSureToMove(
+          gstsServerConfirmAndMovePiece(
             tagPrefabListBlack[tagPrefabListBlack.length - 1],
             powerPercent,
             self

@@ -1,7 +1,7 @@
 import { g } from 'genshin-ts/runtime/core'
 
 import * as Global from '../Global'
-import { gstsCalselfreflectVec } from '../Tool'
+import { gstsServerCalculateReflectVector } from '../Tool'
 
 g.server({
   id: 1073741834,
@@ -23,7 +23,10 @@ g.server({
     //只有初始对象才能被反弹
     if (_evt.onHitEntity.get('isStart').asType('bool')) {
       let FA = self.get('FA').asType('vec3')
-      let newVec = gstsCalselfreflectVec(_evt.onHitEntity.get('moveVec').asType('vec3'), FA)
+      let newVec = gstsServerCalculateReflectVector(
+        _evt.onHitEntity.get('moveVec').asType('vec3'),
+        FA
+      )
 
       Global.getServerStageEntity()
         .get('curPlayer')

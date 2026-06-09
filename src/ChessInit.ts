@@ -1,6 +1,6 @@
 import { g } from 'genshin-ts/runtime/core'
 
-import { gstsServerCheckChessMovestage } from './ChangeControl'
+import { gstsServerCheckPieceMovementState } from './ChangeControl'
 import {
   gstsServerRefreshBothJoined,
   gstsServerSettleIfPlayerLeft
@@ -25,7 +25,7 @@ g.server({
   id: 1073741842
 }).on('whenTimerIsTriggered', (_evt, _f) => {
   gstsServerRefreshBothJoined()
-  gstsServerCheckChessMovestage()
+  gstsServerCheckPieceMovementState()
 })
 
 g.server({

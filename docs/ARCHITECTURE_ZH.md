@@ -28,29 +28,29 @@ L0 资源 / 常量层（无内部依赖）
 
 ## 模块依赖表
 
-| 模块 | 层 | 依赖（内部 import） | 职责 |
-| --- | --- | --- | --- |
-| `Global.ts` | L0 | —（仅引擎） | 阵营、物理常量、初始坐标、墙壁边界、标签 / 定时器 / 预制 ID、方向字典、`getServerStageEntity()` |
-| `UIControlGroupId.ts` | L0 | — | UI 控件组 ID（方向、蓄力、按钮、播报） |
-| `resources/signals.ts` | L0 | — | 信号定义（`defineSignal`） |
-| `resources/prefabs.ts` | L0 | — | 预制体 ID 清单 |
-| `Tool.ts` | L1 | `Global` | 向量数学、碰撞冲量 `gstsServerCaliImpulse`、反射 `gstsCalselfreflectVec`、真实碰撞点、错误提示 UI |
-| `UIControl/ControlUIFunc.ts` | L1 | `UIControlGroupId` | 方向 / 蓄力 UI 的显隐与激活 |
-| `settlement/settleFunction.ts` | L1 | `Global` | 整局结算 `gstsServerSettleGame`（settled 一次性保护）、退出检测 `gstsServerSettleIfPlayerLeft` |
-| `ChangeControl.ts` | L2 | `Global`, `Tool` | `moveList` 维护、可操控判定、回合切换 `gstsServerChangeControl` |
-| `chessEntity/chessObjFunction.ts` | L2 | `ChangeControl`, `Global`, `Tool` | 发射棋子 `gstsServerSureToMove` |
-| `trigger/triggerFunction.ts` | L2 | `Global`, `settlement/settleFunction` | 速度插值 `gstsServerMoveChangeTick`、出界处理 `gstsServerOutCheck` |
-| `ChessInit.ts` | L3 | `ChangeControl`, `settlement/settleFunction` | 关卡图 `1073741842`：初始化、静止扫描、退出结算 |
-| `trigger/triggerNode.ts` | L3 | `ChangeControl`, `Global`, `Tool`, `trigger/triggerFunction` | 图 `1073741827`/`1073741833`：碰撞检测、运动定时器分发 |
-| `chessEntity/chessObjNode.ts` | L3 | `Global`, `Tool` | 图 `1073741834`/`1073741835`：棋子初始化、墙壁反弹 |
-| `chargePower/node/BeginCharge.ts` | L3 | `resources/signals`, `UIControl/ControlUIFunc` | 图 `1073741839`：开始蓄力 |
-| `chargePower/node/StopCharge.ts` | L3 | `chessEntity/chessObjFunction`, `Global`, `resources/signals`, `UIControl/ControlUIFunc` | 图 `1073741838`：发射 |
-| `chargePower/node/ChargeChangeTick.ts` | L3 | —（仅引擎） | 图 `1073741836`：蓄力累加 |
-| `chargePower/node/ResetCharge.ts` | L3 | `resources/signals` | 图 `1073741837`：重置蓄力 |
-| `playerEntity/node/playerCreate.ts` | L3 | `resources/signals` | 图 `1073741828`：镜头、阶段切换 |
-| `playerEntity/node/playerActive.ts` | L3 | `ChangeControl`, `Global`, `resources/signals`, `UIControl/ControlUIFunc` | 图 `1073741829`：选子、生成方向指示 |
-| `playerEntity/node/ControlUISign.ts` | L3 | `Global`, `resources/signals`, `UIControlGroupId` | 图 `1073741841`/`1073741844`：方向控件显隐、左右切换 |
-| `playerEntity/node/playerTimers.ts` | L3 | `ChangeControl`, `Global`, `resources/signals` | 图 `1073741843`：倒计时超时处理 |
+| 模块                                   | 层  | 依赖（内部 import）                                                                      | 职责                                                                                                              |
+| -------------------------------------- | --- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `Global.ts`                            | L0  | —（仅引擎）                                                                              | 阵营、物理常量、初始坐标、墙壁边界、标签 / 定时器 / 预制 ID、方向字典、`getServerStageEntity()`                   |
+| `UIControlGroupId.ts`                  | L0  | —                                                                                        | UI 控件组 ID（方向、蓄力、按钮、播报）                                                                            |
+| `resources/signals.ts`                 | L0  | —                                                                                        | 信号定义（`defineSignal`）                                                                                        |
+| `resources/prefabs.ts`                 | L0  | —                                                                                        | 预制体 ID 清单                                                                                                    |
+| `Tool.ts`                              | L1  | `Global`                                                                                 | 向量数学、碰撞冲量 `gstsServerCalculateImpulse`、反射 `gstsServerCalculateReflectVector`、真实碰撞点、错误提示 UI |
+| `UIControl/ControlUIFunc.ts`           | L1  | `UIControlGroupId`                                                                       | 方向 / 蓄力 UI 的显隐与激活                                                                                       |
+| `settlement/settleFunction.ts`         | L1  | `Global`                                                                                 | 整局结算 `gstsServerSettleGame`（settled 一次性保护）、退出检测 `gstsServerSettleIfPlayerLeft`                    |
+| `ChangeControl.ts`                     | L2  | `Global`, `Tool`                                                                         | `moveList` 维护、可操控判定、回合切换 `gstsServerSwitchTurn`                                                      |
+| `chessEntity/chessObjFunction.ts`      | L2  | `ChangeControl`, `Global`, `Tool`                                                        | 发射棋子 `gstsServerConfirmAndMovePiece`                                                                          |
+| `trigger/triggerFunction.ts`           | L2  | `Global`, `settlement/settleFunction`                                                    | 速度插值 `gstsServerMoveChangeTick`、出界处理 `gstsServerOutCheck`                                                |
+| `ChessInit.ts`                         | L3  | `ChangeControl`, `settlement/settleFunction`                                             | 关卡图 `1073741842`：初始化、静止扫描、退出结算                                                                   |
+| `trigger/triggerNode.ts`               | L3  | `ChangeControl`, `Global`, `Tool`, `trigger/triggerFunction`                             | 图 `1073741827`/`1073741833`：碰撞检测、运动定时器分发                                                            |
+| `chessEntity/chessObjNode.ts`          | L3  | `Global`, `Tool`                                                                         | 图 `1073741834`/`1073741835`：棋子初始化、墙壁反弹                                                                |
+| `chargePower/node/BeginCharge.ts`      | L3  | `resources/signals`, `UIControl/ControlUIFunc`                                           | 图 `1073741839`：开始蓄力                                                                                         |
+| `chargePower/node/StopCharge.ts`       | L3  | `chessEntity/chessObjFunction`, `Global`, `resources/signals`, `UIControl/ControlUIFunc` | 图 `1073741838`：发射                                                                                             |
+| `chargePower/node/ChargeChangeTick.ts` | L3  | —（仅引擎）                                                                              | 图 `1073741836`：蓄力累加                                                                                         |
+| `chargePower/node/ResetCharge.ts`      | L3  | `resources/signals`                                                                      | 图 `1073741837`：重置蓄力                                                                                         |
+| `playerEntity/node/playerCreate.ts`    | L3  | `resources/signals`                                                                      | 图 `1073741828`：镜头、阶段切换                                                                                   |
+| `playerEntity/node/playerActive.ts`    | L3  | `ChangeControl`, `Global`, `resources/signals`, `UIControl/ControlUIFunc`                | 图 `1073741852`：选子、生成方向指示                                                                               |
+| `playerEntity/node/ControlUISign.ts`   | L3  | `Global`, `resources/signals`, `UIControlGroupId`                                        | 图 `1073741841`/`1073741844`：方向控件显隐、左右切换、技能回调转发蓄力信号                                        |
+| `playerEntity/node/playerTimers.ts`    | L3  | `ChangeControl`, `Global`, `resources/signals`                                           | 图 `1073741843`：倒计时超时处理                                                                                   |
 
 ## 依赖图（模块级）
 
@@ -99,7 +99,7 @@ L3 入口（注册 g.server，引擎驱动，彼此不 import）：           �
 
 - **`Global.ts`** 是最被依赖的基础模块（L1–L3 多处引用）。改阵营 ID、墙壁边界、定时器 / 标签 / 预制 ID、初始坐标会波及全局。
 - **`getServerStageEntity()`（guid `1094713345`）** 是全局状态唯一入口；guid 变更需同步编辑器侧关卡实体。
-- **回合状态机** 集中在 `ChangeControl.gstsServerChangeControl`，被 `ChessInit`（静止扫描）和 `playerTimers`（超时）两条路径触发；`canChange` 防抖 + 2s 延迟是切换正确性的关键。
+- **回合状态机** 集中在 `ChangeControl.gstsServerSwitchTurn`，被 `ChessInit`（静止扫描）和 `playerTimers`（超时）两条路径触发；`canChange` 防抖 + 2s 延迟是切换正确性的关键。
 - **结算入口** 统一收敛到 `settleFunction.gstsServerSettleGame`，由「将帅出界」「玩家退出」两类来源调用，`settled` 标记保证整局只结算一次。
 - **ID 常量散落**：UI 控件组 ID 既有集中在 `UIControlGroupId.ts` 的，也有 `Tool.ts`/`ChangeControl.ts` 中硬编码的（如 `1073742874n` 错误提示、`timersId` 倒计时控件）；调整 UI 资源时两处都要检查。
 - **编辑器前置**：预制、UI 控件组、信号、全局定时器、结算模板均为编辑器侧资源，代码仅按 ID 引用。详见 `EDITOR_BOUNDARIES_ZH.md`。

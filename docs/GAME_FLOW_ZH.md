@@ -5,12 +5,12 @@
 
 ## 核心概念
 
-| 概念 | 说明 |
-| --- | --- |
-| 关卡实体 stage | guid `1094713345`，全局状态载体。变量：`moveList`（运动中棋子列表）、`curPlayer`（当前回合玩家）、`canChange`（允许切换回合）、`settled`（整局结算一次性保护）、`ErrorMsg`、全局定时器「红方倒计时 / 黑方倒计时」。 |
-| 玩家实体 | `player(1)`=红方=`faction(1)`，`player(2)`=黑方=`faction(4)`。变量：`isControl`（是否本回合操控权）、`ischarge`/`chargePower`（蓄力态与力度）、`curDirIndex`/`curChessType`/`curChooseChess`（当前选中棋子与方向）、`startPos`（本次发射出发点）、`step`（步数）、`ScanEntity`（扫描命中实体）。 |
-| 棋子实体 | 变量：`棋子类型`（车/马/象/士/帅/炮/兵/兵过河）、`Mass`、`moveVec`（速度向量）、`initSpeed`（基础初速）、`triggerCount`（撞击次数）、`isStart`（是否本回合主动发射子）、`triggerGuidList`（已碰撞过的对象，去重用）。owner 指向所属玩家。 |
-| 方向指示实体 | 选子后围绕棋子生成的箭头预制体。变量：`moveVec`（该方向单位向量）、`dirUIIndex`（与 UI 控件序号对应）。owner 指向目标棋子。红/黑各一种预制（`dirPrefabs`）。 |
+| 概念           | 说明                                                                                                                                                                                                                                                                                             |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 关卡实体 stage | guid `1094713345`，全局状态载体。变量：`moveList`（运动中棋子列表）、`curPlayer`（当前回合玩家）、`canChange`（允许切换回合）、`settled`（整局结算一次性保护）、`ErrorMsg`、全局定时器「红方倒计时 / 黑方倒计时」。                                                                              |
+| 玩家实体       | `player(1)`=红方=`faction(1)`，`player(2)`=黑方=`faction(4)`。变量：`isControl`（是否本回合操控权）、`ischarge`/`chargePower`（蓄力态与力度）、`curDirIndex`/`curChessType`/`curChooseChess`（当前选中棋子与方向）、`startPos`（本次发射出发点）、`step`（步数）、`ScanEntity`（扫描命中实体）。 |
+| 棋子实体       | 变量：`棋子类型`（车/马/象/士/帅/炮/兵/兵过河）、`Mass`、`moveVec`（速度向量）、`initSpeed`（基础初速）、`triggerCount`（撞击次数）、`isStart`（是否本回合主动发射子）、`triggerGuidList`（已碰撞过的对象，去重用）。owner 指向所属玩家。                                                        |
+| 方向指示实体   | 选子后围绕棋子生成的箭头预制体。变量：`moveVec`（该方向单位向量）、`dirUIIndex`（与 UI 控件序号对应）。owner 指向目标棋子。红/黑各一种预制（`dirPrefabs`）。                                                                                                                                     |
 
 ## 流程总览
 
@@ -31,15 +31,15 @@
 
 ## 2. 选子（点击棋子）
 
-`playerActive.ts` / 图 `1073741829`，监听 `Signal.GetQiZi`：
+`playerActive.ts` / 图 `1073741852`，监听 `Signal.GetPiece`：
 
 1. 校验是否为本玩家、`gstsServerCanControl()==1`（即 `moveList` 为空，无棋子在运动）。
-2. 命中实体标签为 `EntityTag.QiZi` 时，调用 `gstsServerCreateDirEffect`：
-   - 先销毁旧的方向指示（`gstsServerDestroyOldDirTag`）。
-   - 按阵营 + 棋子类型从 `gsteServerpieceDirections_red/black` 取可走方向列表；兵过中线（`Wall.center`）自动切为「兵过河」。
+2. 命中实体标签为 `EntityTag.Piece` 时，调用 `gstsServerCreateDirectionIndicators`：
+   - 先销毁旧的方向指示（`gstsServerDestroyOldDirectionMarkers`）。
+   - 按阵营 + 棋子类型从 `gstsServerRedPieceDirections` / `gstsServerBlackPieceDirections` 取可走方向列表；兵过中线（`Wall.center`）自动切为「兵过河」。
    - 围绕棋子为每个方向生成方向指示预制，写入 `moveVec` 与 `dirUIIndex`。
    - 记录玩家 `curChessType` / `curChooseChess`。
-3. 激活方向切换 UI 与蓄力按钮（`gstsServerActiviteChangeUI`），并默认高亮首个方向（`gstsServerActiviteDirUI`）。
+3. 激活方向切换 UI（`gstsServerActivateSwitchUI`），旧普通蓄力按钮保持关闭；服务端等待编辑器侧技能节点回发 `BeginCharge` / `StopCharge` 信号，并默认高亮首个方向（`gstsServerActivateDirectionUI`）。
 
 ## 3. 选方向（左右切换）
 
@@ -50,6 +50,7 @@
 
 ## 4. 蓄力
 
+- **技能输入**（`ControlUISign.ts` / 图 `1073741844`，`whenSkillNodeIsCalled`）：编辑器侧按钮驱动技能；技能节点以参数 `BeginCharge` / `StopCharge` 回调服务端，服务端再发送对应信号。
 - **开始**（`BeginCharge.ts` / 图 `1073741839`，`Signal.BeginCharge`）：隐藏方向 UI、显示进度条（`gstsServerHideUIByChargeBegin`），`ischarge=true`，启动 `charge` 定时器（0.03s）。
 - **充能 tick**（`ChargeChangeTick.ts` / 图 `1073741836`）：每 tick `chargePower += 2`。
 - **重置**（`ResetCharge.ts` / 图 `1073741837`，`Signal.ResetCharge`）：`chargePower=0`。
@@ -59,7 +60,7 @@
 `StopCharge.ts` / 图 `1073741838`，`Signal.StopCharge`：
 
 1. `powerPercent = chargePower / 100`。
-2. 遍历场上方向指示预制，找到 `dirUIIndex == curDirIndex` 的那一个，调用 `gstsServerSureToMove`（`chessObjFunction.ts`）：
+2. 遍历场上方向指示预制，找到 `dirUIIndex == curDirIndex` 的那一个，调用 `gstsServerConfirmAndMovePiece`（`chessObjFunction.ts`）：
    - 将该方向 `moveVec` 三维转二维（`gstsServerVec3ToVec2`），棋子 `isStart=true`，挂拖尾光效。
    - 加入 `moveList`，记录玩家 `startPos`。
    - 兵过河后 `initSpeed` 提升为 25。
@@ -73,15 +74,15 @@
   - `MoveActiveTriggerBefore` 用较小阻尼 `deltaMoveTriggerBefore`；碰撞后切到 `MoveActive` 用 `deltaMove`。
 - **棋子互撞**（`triggerNode.ts` 图 `1073741827`，`whenOnHitDetectionIsTriggered`）：
   - 双方各 `triggerCount += 1`，都加入 `moveList`，并用 `triggerGuidList` 去重避免重复结算同一对碰撞。
-  - 「炮」首次命中（`triggerCount==0` 且 `isStart`）走特殊加速逻辑；其余走 `gstsServerCaliImpulse`（2D 刚体冲量算法，计算法向 / 切向冲量、线速度与自转）。
-- **墙壁反弹**（`chessObjNode.ts` 图 `1073741835` NineCeilWall）：仅 `isStart` 的主动子触墙时按墙面法线 `FA` 反射速度（`gstsCalselfreflectVec`），更新出发点。
+  - 「炮」首次命中（`triggerCount==0` 且 `isStart`）走特殊加速逻辑；其余走 `gstsServerCalculateImpulse`（2D 刚体冲量算法，计算法向 / 切向冲量、线速度与自转）。
+- **墙壁反弹**（`chessObjNode.ts` 图 `1073741835` NineCeilWall）：仅 `isStart` 的主动子触墙时按墙面法线 `FA` 反射速度（`gstsServerCalculateReflectVector`），更新出发点。
 
 ## 7. 静止判定与回合切换
 
 `ChangeControl.ts`：
 
-- `CheckChessMovestage`（图 `1073741842` 定时器，3s）扫描 `moveList`，移除速度 < 0.1 的棋子；当 `moveList` 清空时调用 `gstsServerChangeControl`。
-- `gstsServerChangeControl`：读取当前 `curPlayer` 阵营，在 `canChange=true` 时：
+- `CheckChessMovestage`（图 `1073741842` 定时器，3s）扫描 `moveList`，移除速度 < 0.1 的棋子；当 `moveList` 清空时调用 `gstsServerSwitchTurn`。
+- `gstsServerSwitchTurn`：读取当前 `curPlayer` 阵营，在 `canChange=true` 时：
   - 广播回合提示（`gstsServerErrorMsg`），关闭当前方倒计时 UI。
   - `canChange=false` 防抖，关掉当前方倒计时全局定时器。
   - 延迟 2s 后切换 `curPlayer`、目标方 `isControl=true`、打开其倒计时 UI 并启动其倒计时全局定时器。
@@ -90,7 +91,7 @@
 
 `playerTimers.ts` / 图 `1073741843`，`whenGlobalTimerIsTriggered`：
 
-- 「红方/黑方倒计时」触发且当前无棋子运动时：若该玩家正在蓄力则强制 `send(StopCharge)`（即按当前力度发射），否则直接 `gstsServerChangeControl` 切换回合。
+- 「红方/黑方倒计时」触发且当前无棋子运动时：若该玩家正在蓄力则强制 `send(Signal.StopCharge)`（即按当前力度发射），否则直接 `gstsServerSwitchTurn` 切换回合。
 
 ## 9. 出界与结算
 
@@ -104,19 +105,19 @@
 
 ## 节点图 ID 速查
 
-| 图 ID | 名称 | 触发 | 职责 |
-| --- | --- | --- | --- |
-| 1073741842 | ChessInitGraph | 创建 / 定时器 / 实体移除 | 关卡初始化、静止扫描、退出结算 |
-| 1073741828 | playerCreated | 创建 / 定时器 | 镜头、阶段切换信号 |
-| 1073741834 | ChessCreate | 创建 | 棋子变量初始化 |
-| 1073741829 | getNowQZ | Signal.GetQiZi | 选子、生成方向指示、激活 UI |
-| 1073741844 | changeDir | UI 控件组 | 左右切换方向 |
-| 1073741841 | ControlUI | Signal.ControlUI | 方向控件显隐 |
-| 1073741839 | BeginCharge | Signal.BeginCharge | 开始蓄力 |
-| 1073741836 | ChargeChangeTick | 定时器 | 蓄力累加 |
-| 1073741838 | StopCharge | Signal.StopCharge | 发射棋子 |
-| 1073741837 | ResetCharge | Signal.ResetCharge | 重置蓄力 |
-| 1073741827 | trigger | 命中检测 | 棋子互撞冲量 |
-| 1073741833 | moveActChange | 定时器 | 速度插值 / 出界检测分发 |
-| 1073741835 | NineCeilWall | 命中检测 | 墙壁反弹 |
-| 1073741843 | playerTimers | 全局定时器 | 倒计时超时处理 |
+| 图 ID      | 名称                         | 触发                     | 职责                                     |
+| ---------- | ---------------------------- | ------------------------ | ---------------------------------------- |
+| 1073741842 | ChessInitGraph               | 创建 / 定时器 / 实体移除 | 关卡初始化、静止扫描、退出结算           |
+| 1073741828 | playerCreated                | 创建 / 定时器            | 镜头、阶段切换信号                       |
+| 1073741834 | ChessCreate                  | 创建                     | 棋子变量初始化                           |
+| 1073741852 | getCurrentPiece              | Signal.GetPiece          | 选子、生成方向指示、激活 UI              |
+| 1073741844 | changeDir / chargeSkillInput | UI 控件组 / 技能节点     | 左右切换方向、接收技能回调并转发蓄力信号 |
+| 1073741841 | ControlUI                    | Signal.ControlUI         | 方向控件显隐                             |
+| 1073741839 | BeginCharge                  | Signal.BeginCharge       | 开始蓄力                                 |
+| 1073741836 | ChargeChangeTick             | 定时器                   | 蓄力累加                                 |
+| 1073741838 | StopCharge                   | Signal.StopCharge        | 发射棋子                                 |
+| 1073741837 | ResetCharge                  | Signal.ResetCharge       | 重置蓄力                                 |
+| 1073741827 | trigger                      | 命中检测                 | 棋子互撞冲量                             |
+| 1073741833 | moveActChange                | 定时器                   | 速度插值 / 出界检测分发                  |
+| 1073741835 | NineCeilWall                 | 命中检测                 | 墙壁反弹                                 |
+| 1073741843 | playerTimers                 | 全局定时器               | 倒计时超时处理                           |

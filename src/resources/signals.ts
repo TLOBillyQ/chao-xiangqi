@@ -7,7 +7,7 @@ export const Signal = {
   chgPlayerStage: defineSignal('chgPlayerStage', []),
   ControlUI: defineSignal('ControlUI', []),
   ExitGame: defineSignal('ExitGame', []),
-  GetQiZi: defineSignal('GetQiZi', []),
+  GetPiece: defineSignal('GetPiece', []),
   GH: defineSignal('GH', []),
   MoveForward: defineSignal('MoveForward', []),
   playerReady: defineSignal('playerReady', []),

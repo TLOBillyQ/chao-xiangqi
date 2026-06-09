@@ -112,8 +112,8 @@ export const firstChessPos = vec3([-2.73, 5.44, -1.26])
 //一格长度
 export const chessInterval = 3
 
-export function gsteServerpieceDirections_red(chessType: string) {
-  const pieceDirections_red = dict({
+export function gstsServerRedPieceDirections(chessType: string) {
+  const redPieceDirections = dict({
     车: list('vec3', [
       [0, 1, 0],
       [1, 0, 0],
@@ -162,13 +162,13 @@ export function gsteServerpieceDirections_red(chessType: string) {
     ])
   })
 
-  const diclist = pieceDirections_red.get(chessType)
+  const diclist = redPieceDirections.get(chessType)
 
   return diclist
 }
 
-export function gsteServerpieceDirections_black(chessType: string) {
-  const pieceDirections = dict({
+export function gstsServerBlackPieceDirections(chessType: string) {
+  const blackPieceDirections = dict({
     车: list('vec3', [
       [0, -1, 0],
       [-1, 0, 0],
@@ -216,7 +216,7 @@ export function gsteServerpieceDirections_black(chessType: string) {
       [1, 0, 0]
     ])
   })
-  return pieceDirections.get(chessType)
+  return blackPieceDirections.get(chessType)
 }
 
 //棋盘墙壁
@@ -224,13 +224,13 @@ export const Wall = {
   leftz: -3.76,
   rightz: 25.1,
   topx: -30.42,
-  floorx: -1.13,
+  bottomX: -1.13,
   center: -16.16
 }
 
 //标签id
 export const EntityTag = {
-  QiZi: 1073741825n,
+  Piece: 1073741825n,
   Dir: 1073741826n
 }
 
