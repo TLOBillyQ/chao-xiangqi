@@ -15,9 +15,7 @@ g.server({
     let entity = _evt.signalSourceEntity.getPlayerEntityToWhichTheCharacterBelongs()
     if (entity == self) isForSelf = true
   }
-  print(str('CHARGE_BEGIN_RECV'))
   if (isForSelf) {
-    print(str('CHARGE_BEGIN_SELF'))
     //UI控制
     gstsServerHideUIByChargeBegin(self)
     self.set('ischarge', true)

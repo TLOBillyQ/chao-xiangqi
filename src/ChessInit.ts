@@ -19,7 +19,6 @@ g.server({
   //本局是否曾满员(2人)——退出检测用，避免单人试玩/吃子销毁误判为有人离场
   self.set('bothJoined', false)
   self.set('gstsInjectVerify', '2026-06-03-verify-1')
-  print(str('PROBE_STAGE_INIT_DONE'))
 })
 
 g.server({
@@ -33,6 +32,5 @@ g.server({
   id: 1073741842
 }).on('whenEntityIsRemovedDestroyed', (_evt, _f) => {
   //引擎无「玩家离开」事件；玩家退出会移除其玩家实体，借「实体移除/销毁时」探测中途退出
-  print(str('PROBE_DESTROY_FIRED'))
   gstsServerSettleIfPlayerLeft()
 })

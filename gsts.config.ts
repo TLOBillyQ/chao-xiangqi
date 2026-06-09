@@ -6,8 +6,8 @@ const config: GstsConfig = {
   outDir: './dist',
   lang: 'zh-CN',
   inject: {
-    playerId: 342482779,
-    mapId: 1073741826,
+    playerId: 342478178,
+    mapId: 1073741863,
     nodeGraphId: 1073741842
   }
 }

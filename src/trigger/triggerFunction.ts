@@ -52,12 +52,9 @@ export function gstsServerOutCheck(checkentity: entity) {
     //幂等保护：出界检测定时器(0.03s循环)在棋子3秒后销毁前可能反复进入本分支，
     //同一枚子只处理一次出界，避免重复结算/重复落子动画/重复销毁。
     if (checkentity.get('isOut').asType('bool')) {
-      print(str('PROBE_OUT_REENTRY'))
     } else {
       checkentity.set('isOut', true)
       let _qiziType = checkentity.get('棋子类型').asType('str')
-      print(str('PROBE_OUT_FIRST'))
-      print(str(_qiziType))
       let _chessFaction = gsts.f.queryEntityFaction(checkentity)
       //将/帅被吃（出界）即终局：记录是否为王、以及被吃方是否红方
       let isKing = _qiziType == '帅' || _qiziType == '将'

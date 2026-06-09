@@ -20,10 +20,8 @@ import { btn_settle, ui_losePanel, ui_winPanel } from '../UIControlGroupId'
  * @param redWin 红方是否获胜（false 则黑方胜）
  */
 export function gstsServerSettleGame(redWin: boolean) {
-  print(str('PROBE_SG_ENTER'))
   let stage = getServerStageEntity()
   if (!stage.get('settled').asType('bool')) {
-    print(str('PROBE_SG_UNSETTLED'))
     stage.set('settled', true)
     stage.set('redWin', redWin)
     // 赢家显示胜利面板，输家显示失败面板
@@ -34,11 +32,9 @@ export function gstsServerSettleGame(redWin: boolean) {
       player(2).setUiControlStatus(ui_winPanel, UIControlGroupStatus.On)
       player(1).setUiControlStatus(ui_losePanel, UIControlGroupStatus.On)
     }
-    print(str('PROBE_SG_PANELS_OK'))
     // 两名玩家都显示「结算」按钮，点击后才真正结算
     player(1).setUiControlStatus(btn_settle, UIControlGroupStatus.On)
     player(2).setUiControlStatus(btn_settle, UIControlGroupStatus.On)
-    print(str('PROBE_SG_DONE'))
   }
 }
 
@@ -70,7 +66,6 @@ export function gstsServerRefreshBothJoined() {
   if (players.length > 1) {
     if (!stage.get('bothJoined').asType('bool')) {
       stage.set('bothJoined', true)
-      print(str('PROBE_BOTH_JOINED'))
     }
   }
 }
@@ -86,19 +81,15 @@ export function gstsServerRefreshBothJoined() {
 export function gstsServerSettleIfPlayerLeft() {
   let players = gsts.f.getListOfPlayerEntitiesOnTheField()
   let stage = getServerStageEntity()
-  print(str('PROBE_LEFT_CHECK'))
-  print(str(players.length))
   // 记录本局是否曾满员(2人)：单人试玩人数恒为1，且本事件对任意实体销毁(含吃子)都触发，
   // 必须「曾经2人、现在1人」才算有人离场，否则会在开局/吃子时误判结算。
   if (players.length > 1) {
     if (!stage.get('bothJoined').asType('bool')) {
       stage.set('bothJoined', true)
-      print(str('PROBE_BOTH_JOINED'))
     }
   }
   if (players.length == 1) {
     if (stage.get('bothJoined').asType('bool')) {
-      print(str('PROBE_LEFT_FIRE'))
       let winnerFaction = gsts.f.queryEntityFaction(players[0])
       if (winnerFaction == factionRed) {
         gstsServerSettleGame(true)

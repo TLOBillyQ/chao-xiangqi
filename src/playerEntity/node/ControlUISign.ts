@@ -24,10 +24,13 @@ g.server({
   id: 1073741844,
   name: 'changeDir'
 }).on('whenUiControlGroupIsTriggered', (_evt, _f) => {
-  // 点击「结算」按钮 → 真正结算；否则走方向切换逻辑
+  // 点击「结算」按钮 → 真正结算；左右按钮 → 切换方向。
   if (_evt.uiControlGroupIndex == UIControl.btn_settle) {
     gstsServerConfirmSettle()
-  } else {
+  } else if (
+    _evt.uiControlGroupCompositeIndex == UIControl.changeDir.left ||
+    _evt.uiControlGroupCompositeIndex == UIControl.changeDir.right
+  ) {
     let controlEntity = _evt.eventSourceEntity
     const curChooseChessType = controlEntity.get('curChessType').asType('str')
     let curDirIndex = controlEntity.get('curDirIndex').asType('float')
@@ -55,5 +58,16 @@ g.server({
 
     controlEntity.set('curDirIndex', newIndex)
     controlEntity.setUiControlStatus(dirList[idx(int(newIndex))], UIControlGroupStatus.On)
+  }
+})
+
+g.server({
+  id: 1073741844,
+  name: 'chargeSkillInput'
+}).on('whenSkillNodeIsCalled', (_evt, _f) => {
+  let callerPlayer = _evt.callerEntity.getPlayerEntityToWhichTheCharacterBelongs()
+  if (callerPlayer == self) {
+    if (_evt.parameter1 == 'BeginCharge') send(Signal.BeginCharge)
+    else if (_evt.parameter1 == 'StopCharge') send(Signal.StopCharge)
   }
 })
