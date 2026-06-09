@@ -39,13 +39,13 @@
    - 按阵营 + 棋子类型从 `gstsServerRedPieceDirections` / `gstsServerBlackPieceDirections` 取可走方向列表；兵过中线（`Wall.center`）自动切为「兵过河」。
    - 围绕棋子为每个方向生成方向指示预制，写入 `moveVec` 与 `dirUIIndex`。
    - 记录玩家 `curChessType` / `curChooseChess`。
-3. 激活方向切换 UI（`gstsServerActivateSwitchUI`），旧普通蓄力按钮保持关闭；服务端等待编辑器侧技能节点回发 `BeginCharge` / `StopCharge` 信号，并默认高亮首个方向（`gstsServerActivateDirectionUI`）。
+3. 激活方向切换 UI 与蓄力虚拟按钮（`gstsServerActivateSwitchUI`）；按阵营和棋子类型打开对应棋子方向 UI 组（兵 / 卒会区分未过河与过河），并默认高亮首个方向（`gstsServerActivateDirectionUI`）。
 
 ## 3. 选方向（左右切换）
 
 `ControlUISign.ts` / 图 `1073741844`，`whenUiControlGroupIsTriggered`：
 
-- 根据 `curChessType` 取对应方向控件 ID 列表（`UIControlGroupId.dirContrlId`）。
+- 根据 `curChessType` 取对应方向控件 ID 列表（`UIControlGroupId.dirContrlId`），棋子方向 UI 组 ID 见 `redPieceDirectionUi` / `blackPieceDirectionUi`。
 - 左 / 右按钮（`changeDir.left/right`）循环 `curDirIndex`，关闭旧高亮、打开新高亮。
 
 ## 4. 蓄力

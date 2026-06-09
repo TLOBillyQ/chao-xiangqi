@@ -29,6 +29,25 @@ const eightDirKnight = {
   topLeft: 1073742778
 }
 
+export const allDirectionControlIds = list('int', [
+  theEightDir.top,
+  theEightDir.topRight,
+  theEightDir.right,
+  theEightDir.bottomRight,
+  theEightDir.bottom,
+  theEightDir.bottomLeft,
+  theEightDir.left,
+  theEightDir.topLeft,
+  eightDirKnight.top,
+  eightDirKnight.topRight,
+  eightDirKnight.right,
+  eightDirKnight.bottomRight,
+  eightDirKnight.bottom,
+  eightDirKnight.bottomLeft,
+  eightDirKnight.left,
+  eightDirKnight.topLeft
+])
+
 export const dirContrlId = {
   车: list('int', [theEightDir.top, theEightDir.right, theEightDir.bottom, theEightDir.left]),
   炮: list('int', [theEightDir.top, theEightDir.right, theEightDir.bottom, theEightDir.left]),
@@ -57,6 +76,28 @@ export const dirContrlId = {
     eightDirKnight.left,
     eightDirKnight.topLeft
   ])
+}
+
+export const redPieceDirectionUi = {
+  帅: 1073742762n,
+  士: 1073742763n,
+  象: 1073742764n, // 红相
+  马: 1073742765n,
+  车: 1073742766n,
+  炮: 1073742767n,
+  兵: 1073742768n,
+  兵过河: 1073742769n
+}
+
+export const blackPieceDirectionUi = {
+  帅: 1073742755n, // 黑将
+  士: 1073742756n,
+  象: 1073742757n,
+  马: 1073742758n,
+  车: 1073742759n,
+  炮: 1073742760n,
+  兵: 1073742761n, // 黑卒
+  兵过河: 1073742770n // 过河卒
 }
 
 //结算按钮：满足结算条件后显示，点击它才真正结算（settleStage）

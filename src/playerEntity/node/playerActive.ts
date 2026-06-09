@@ -94,7 +94,7 @@ function gstsServerCreateDirectionIndicators(targetEntity: entity, controlEntity
   //激活控件方向选择
   gstsServerActivateSwitchUI(controlEntity)
   //激活方向
-  gstsServerActivateDirectionUI(controlEntity, pieceKey)
+  gstsServerActivateDirectionUI(controlEntity, pieceKey, Faction == factionRed)
 }
 
 //销毁旧的棋子扫描
