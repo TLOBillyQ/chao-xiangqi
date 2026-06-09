@@ -90,7 +90,8 @@ export function gstsServerActivateDirectionUI(
 }
 
 export function gstsServerHideUIByChargeBegin(playerEntity: PlayerEntity) {
-  playerEntity.setUiControlStatus(UIControl.chargeBegin, UIControlGroupStatus.Off)
+  // 蓄力期间不能关闭 chargeBegin 控件组：该按钮绑定长按技能，
+  // 玩家手指仍按在按钮上，关闭控件组会切断长按输入，技能立即中断并触发 StopCharge。
   playerEntity.setUiControlStatus(UIControl.chargeProgress, UIControlGroupStatus.On)
   playerEntity.setUiControlStatus(UIControl.changeDir.left, UIControlGroupStatus.Off)
   playerEntity.setUiControlStatus(UIControl.changeDir.right, UIControlGroupStatus.Off)
