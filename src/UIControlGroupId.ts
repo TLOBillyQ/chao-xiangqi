@@ -59,6 +59,13 @@ export const dirContrlId = {
   ])
 }
 
+//结算按钮：满足结算条件后显示，点击它才真正结算（settleStage）
+export const btn_settle = 1073743811n
+//胜利面板：结算时给赢家显示
+export const ui_winPanel = 1073742676n
+//失败面板：结算时给输家显示
+export const ui_losePanel = 1073742720n
+
 // TODO: 以下 UI 常量暂未被代码引用，待 UI 功能实现后使用或清理
 //重开按钮
 export const btn_reGame = 1073742690n

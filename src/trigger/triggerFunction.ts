@@ -1,6 +1,7 @@
 import { entity, vec3 } from 'genshin-ts/runtime/value'
 
 import * as Global from '../Global'
+import * as Settle from '../settlement/settleFunction'
 
 /**
  * 速度插值结算定时器
@@ -48,94 +49,114 @@ export function gstsServerOutCheck(checkentity: entity) {
     checkentity.pos.x < Global.Wall.topx ||
     checkentity.pos.x > Global.Wall.floorx
   ) {
-    let _qiziType = checkentity.get('棋子类型').asType('str')
-    let _chessFaction = gsts.f.queryEntityFaction(checkentity)
-    //获取拥有者实体
-    let _ownerEntity = checkentity.owner()
-    //删除所有运动器
-    gsts.f.stopAndDeleteBasicMotionDevice(checkentity, '', true)
-    gsts.f.stopTimer(checkentity, Global.Tick_OutCheck)
+    //幂等保护：出界检测定时器(0.03s循环)在棋子3秒后销毁前可能反复进入本分支，
+    //同一枚子只处理一次出界，避免重复结算/重复落子动画/重复销毁。
+    if (checkentity.get('isOut').asType('bool')) {
+      print(str('PROBE_OUT_REENTRY'))
+    } else {
+      checkentity.set('isOut', true)
+      let _qiziType = checkentity.get('棋子类型').asType('str')
+      print(str('PROBE_OUT_FIRST'))
+      print(str(_qiziType))
+      let _chessFaction = gsts.f.queryEntityFaction(checkentity)
+      //将/帅被吃（出界）即终局：记录是否为王、以及被吃方是否红方
+      let isKing = _qiziType == '帅' || _qiziType == '将'
+      let redIsLoser = _chessFaction == Global.factionRed
+      //获取拥有者实体
+      let _ownerEntity = checkentity.owner()
+      //删除所有运动器
+      gsts.f.stopAndDeleteBasicMotionDevice(checkentity, '', true)
+      gsts.f.stopTimer(checkentity, Global.Tick_OutCheck)
 
-    if (checkentity.pos.z < Global.Wall.leftz) {
-      //左侧掉落
-      const newvec = gsts.f._3dVectorRotation(
-        gsts.f.create3dVector(0, 0, checkentity.rotation.y * -1),
-        gsts.f._3dVectorRotation(gsts.f.create3dVector(-90, 0, 0), Vector3.forward)
-      )
-      gsts.f.addTargetOrientedRotationBasedMotionDevice(
-        checkentity,
-        'as',
-        1,
-        gsts.f.directionVectorToRotation(newvec, Vector3.back)
-      )
+      if (checkentity.pos.z < Global.Wall.leftz) {
+        //左侧掉落
+        const newvec = gsts.f._3dVectorRotation(
+          gsts.f.create3dVector(0, 0, checkentity.rotation.y * -1),
+          gsts.f._3dVectorRotation(gsts.f.create3dVector(-90, 0, 0), Vector3.forward)
+        )
+        gsts.f.addTargetOrientedRotationBasedMotionDevice(
+          checkentity,
+          'as',
+          1,
+          gsts.f.directionVectorToRotation(newvec, Vector3.back)
+        )
+      }
+
+      if (checkentity.pos.z > Global.Wall.rightz) {
+        //右侧掉落
+        const newvec = gsts.f._3dVectorRotation(
+          gsts.f.create3dVector(0, 0, checkentity.rotation.y),
+          gsts.f._3dVectorRotation(gsts.f.create3dVector(90, 0, 0), Vector3.forward)
+        )
+        gsts.f.addTargetOrientedRotationBasedMotionDevice(
+          checkentity,
+          'as',
+          1,
+          gsts.f.directionVectorToRotation(newvec, Vector3.forward)
+        )
+      }
+
+      if (checkentity.pos.x < Global.Wall.topx) {
+        //上侧掉落
+        const newvec = gsts.f._3dVectorRotation(
+          gsts.f.create3dVector(checkentity.rotation.y * -1, 0, 0),
+          Vector3.forward
+        )
+        gsts.f.addTargetOrientedRotationBasedMotionDevice(
+          checkentity,
+          'as',
+          1,
+          gsts.f.directionVectorToRotation(newvec, Vector3.left)
+        )
+      }
+
+      if (checkentity.pos.x > Global.Wall.floorx) {
+        //下侧掉落
+        const newvec = gsts.f._3dVectorRotation(
+          gsts.f.create3dVector(checkentity.rotation.y, 0, 0),
+          Vector3.forward
+        )
+        gsts.f.addTargetOrientedRotationBasedMotionDevice(
+          checkentity,
+          'as',
+          1,
+          gsts.f.directionVectorToRotation(newvec, Vector3.right)
+        )
+      }
+
+      const capturedEntity = checkentity
+      setTimeout((_e) => {
+        //下落效果
+        gsts.f.addUniformBasicLinearMotionDevice(
+          capturedEntity,
+          'draw',
+          2,
+          Vector3.Scale(Vector3.down, 3)
+        )
+        capturedEntity.playTimedEffects(
+          configId(1199570947),
+          'GI_RootNode',
+          true,
+          true,
+          [0, 0, 0],
+          [0, 0, 0],
+          1,
+          true
+        )
+      }, 1000)
+      setTimeout((_e) => {
+        //销毁棋子
+        //checkentity.activateDisableModelDisplay(false)
+        capturedEntity.destroy()
+        //若被吃的是将/帅，落子动画结束后结算：被吃方判负、对方判胜
+        if (isKing) {
+          if (redIsLoser) {
+            Settle.gstsServerSettleGame(false)
+          } else {
+            Settle.gstsServerSettleGame(true)
+          }
+        }
+      }, 3000)
     }
-
-    if (checkentity.pos.z > Global.Wall.rightz) {
-      //右侧掉落
-      const newvec = gsts.f._3dVectorRotation(
-        gsts.f.create3dVector(0, 0, checkentity.rotation.y),
-        gsts.f._3dVectorRotation(gsts.f.create3dVector(90, 0, 0), Vector3.forward)
-      )
-      gsts.f.addTargetOrientedRotationBasedMotionDevice(
-        checkentity,
-        'as',
-        1,
-        gsts.f.directionVectorToRotation(newvec, Vector3.forward)
-      )
-    }
-
-    if (checkentity.pos.x < Global.Wall.topx) {
-      //上侧掉落
-      const newvec = gsts.f._3dVectorRotation(
-        gsts.f.create3dVector(checkentity.rotation.y * -1, 0, 0),
-        Vector3.forward
-      )
-      gsts.f.addTargetOrientedRotationBasedMotionDevice(
-        checkentity,
-        'as',
-        1,
-        gsts.f.directionVectorToRotation(newvec, Vector3.left)
-      )
-    }
-
-    if (checkentity.pos.x > Global.Wall.floorx) {
-      //下侧掉落
-      const newvec = gsts.f._3dVectorRotation(
-        gsts.f.create3dVector(checkentity.rotation.y, 0, 0),
-        Vector3.forward
-      )
-      gsts.f.addTargetOrientedRotationBasedMotionDevice(
-        checkentity,
-        'as',
-        1,
-        gsts.f.directionVectorToRotation(newvec, Vector3.right)
-      )
-    }
-
-    const capturedEntity = checkentity
-    setTimeout((_e) => {
-      //下落效果
-      gsts.f.addUniformBasicLinearMotionDevice(
-        capturedEntity,
-        'draw',
-        2,
-        Vector3.Scale(Vector3.down, 3)
-      )
-      capturedEntity.playTimedEffects(
-        configId(1199570947),
-        'GI_RootNode',
-        true,
-        true,
-        [0, 0, 0],
-        [0, 0, 0],
-        1,
-        true
-      )
-    }, 1000)
-    setTimeout((_e) => {
-      //销毁棋子
-      //checkentity.activateDisableModelDisplay(false)
-      capturedEntity.destroy()
-    }, 3000)
   }
 }

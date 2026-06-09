@@ -10,6 +10,8 @@ g.server({
   //初始化撞击次数
   self.set('triggerCount', float(0))
   self.set('isStart', false)
+  //出界处理幂等标记：一枚子出界只结算/落子一次
+  self.set('isOut', false)
 })
 
 //九宫格范围检测
