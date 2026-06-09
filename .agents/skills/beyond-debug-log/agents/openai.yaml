@@ -1,0 +1,3 @@
+display_name: Beyond Debug Log
+short_description: Analyze Beyond .gia logs by playerId.
+default_prompt: Analyze the latest Beyond debug log for this Genshin-TS project.
