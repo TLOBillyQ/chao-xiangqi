@@ -12,6 +12,9 @@ g.server({
   self.set('isStart', false)
   //出界处理幂等标记：一枚子出界只结算/落子一次
   self.set('isOut', false)
+  //记录出生朝向；方向字典是出生朝向下的基准，选子时按 当前yaw-出生yaw 的差值旋转
+  let rotate = gsts.f.getEntityLocationAndRotation(self).rotate
+  self.set('initYaw', rotate.y)
 })
 
 //九宫格范围检测

@@ -13,6 +13,7 @@ import {
   Wall
 } from '../../Global'
 import { Signal } from '../../resources/signals'
+import { gstsServerVec3ToVec2 } from '../../Tool'
 import {
   gstsServerActivateDirectionUI,
   gstsServerActivateSwitchUI
@@ -48,6 +49,13 @@ function gstsServerCreateDirectionIndicators(targetEntity: entity, controlEntity
 
   let pos = gsts.f.getEntityLocationAndRotation(targetEntity).location
 
+  //方向以棋子当前朝向为准：字典是出生朝向下的基准，按 当前yaw-出生yaw 的差值整体旋转
+  let curYaw = gsts.f.getEntityLocationAndRotation(targetEntity).rotate.y
+  let initYaw = gsts.f.getCustomVariable(targetEntity, 'initYaw').asType('float')
+  let deltaYaw = curYaw - initYaw
+  print(str('DIR_DELTA_YAW'))
+  print(str(deltaYaw))
+
   //先给一个默认值
   let dirList = list('vec3', [[0, 1, 0]])
 
@@ -67,11 +75,23 @@ function gstsServerCreateDirectionIndicators(targetEntity: entity, controlEntity
   }
 
   for (let i = 0; i < dirList.length; i++) {
-    let rad = gsts.f.arctangentFunction(dirList[i].x / dirList[i].y)
-    let Deg = gsts.f.radiansToDegrees(rad)
+    //逻辑系→世界系→绕Y旋转deltaYaw→转回逻辑系（世界系往返保证旋向与引擎yaw一致）
+    let worldVec = gstsServerVec3ToVec2(dirList[i])
+    let rotatedWorld = gsts.f._3dVectorRotation(gsts.f.create3dVector(0, deltaYaw, 0), worldVec)
+    let dirVec = gsts.f.create3dVector(rotatedWorld.z, rotatedWorld.x * -1, 0)
 
-    let Normalization = gsts.f._3dVectorNormalization(dirList[i])
-    if (dirList[i].y < 0) Deg += 180
+    //y==0（正横向）显式给角，规避除零与负零语义（旋转节点往返可能把+0变-0，atan(x/-0)会差180°）
+    let Deg = 0
+    if (dirVec.y == 0) {
+      Deg = 90
+      if (dirVec.x < 0) Deg = -90
+    } else {
+      let rad = gsts.f.arctangentFunction(dirVec.x / dirVec.y)
+      Deg = gsts.f.radiansToDegrees(rad)
+      if (dirVec.y < 0) Deg += 180
+    }
+
+    let Normalization = gsts.f._3dVectorNormalization(dirVec)
     let _createPos = gsts.f.create3dVector(pos.x - Normalization.y, pos.y, pos.z + Normalization.x)
     let rotate = gsts.f.create3dVector(0, Deg, 0)
 
