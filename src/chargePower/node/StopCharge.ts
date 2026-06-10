@@ -2,6 +2,7 @@ import { g } from 'genshin-ts/runtime/core'
 
 import { gstsServerConfirmAndMovePiece } from '../../chessEntity/chessObjFunction'
 import { dirPrefabs } from '../../Global'
+import { gstsServerDestroyLandingMarker } from '../chargeFunction'
 import { Signal } from '../../resources/signals'
 import { gstsServerHideUIByChargeStop } from '../../UIControl/ControlUIFunc'
 
@@ -54,6 +55,9 @@ g.server({
         }
         gsts.f.destroyEntity(tagPrefabListBlack[tagPrefabListBlack.length - 1])
       }
+
+      //发射后销毁落点指示
+      gstsServerDestroyLandingMarker()
 
       //清理自身变量
       self.set('curDirIndex', 999)

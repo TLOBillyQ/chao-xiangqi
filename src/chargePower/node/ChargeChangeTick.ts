@@ -1,5 +1,7 @@
 import { g } from 'genshin-ts/runtime/core'
 
+import { gstsServerReconcileLandingMarker } from '../chargeFunction'
+
 g.server({
   id: 1073741836,
   name: 'ChargeChangeTick'
@@ -13,4 +15,8 @@ g.server({
   }
 
   f.setCustomVariable(entity, 'chargePower', chargePower)
+
+  if (isCharge) {
+    gstsServerReconcileLandingMarker(entity)
+  }
 })

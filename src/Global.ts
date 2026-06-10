@@ -24,6 +24,11 @@ export const dirPrefabs = {
   black: prefabId(1077936135n)
 }
 
+//预计落点指示预制体
+export const landingPrefab = prefabId(1077936158n)
+//落点预计距离校准系数（实测后调整：实际距离/预计距离）
+export const landingCalibration = 1.0
+
 /**
  * 获取关卡实体
  */
