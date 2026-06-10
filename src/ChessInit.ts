@@ -3,6 +3,7 @@ import { g } from 'genshin-ts/runtime/core'
 import { gstsServerCheckPieceMovementState } from './ChangeControl'
 import {
   gstsServerRefreshBothJoined,
+  gstsServerSettleIfOpponentAbsent,
   gstsServerSettleIfPlayerLeft
 } from './settlement/settleFunction'
 
@@ -18,13 +19,17 @@ g.server({
   self.set('redWin', false)
   //本局是否曾满员(2人)——退出检测用，避免单人试玩/吃子销毁误判为有人离场
   self.set('bothJoined', false)
-  self.set('gstsInjectVerify', '2026-06-03-verify-1')
+  //对方缺席超时判定的等待周期计数（实测约1秒/周期，见 gstsServerSettleIfOpponentAbsent）
+  self.set('waitTicks', 0)
+  self.set('gstsInjectVerify', '2026-06-10-settle-clean-1')
 })
 
 g.server({
   id: 1073741842
 }).on('whenTimerIsTriggered', (_evt, _f) => {
   gstsServerRefreshBothJoined()
+  //对方从未加入时的缺席超时结算（约1分钟，见 OPPONENT_WAIT_TICKS）
+  gstsServerSettleIfOpponentAbsent()
   gstsServerCheckPieceMovementState()
 })
 

@@ -37,12 +37,24 @@ powershell -ExecutionPolicy Bypass -File .agents\skills\beyond-debug-log\scripts
 
 ## Probe Meanings In This Project
 
+No probes are active in the current build (all removed after the 2026-06-10 settlement diagnosis). The sections below decode historical logs.
+
+Leave-settlement diagnosis probes (only in logs from 2026-06-10 builds):
+
+- `PROBE_TICK_LEN`: 3s timer tick; the next three numeric payloads are, in order: `getListOfPlayerEntitiesOnTheField().length` / typed `EntityType.Player` count / typed `EntityType.Character` count. `1/2/2` means the legacy player-list node undercounts; `1/1/1` with a visible opponent means the server never saw player 2; after a quit, stuck `2/x/x` means a ghost player entity.
+- `PROBE_EVT_LEN`: an entity removed/destroyed event fired (pre-settlement); the next numeric payload is the player-list length at that moment.
+- `PROBE_ONE_LEFT_NOT_JOINED`: removal event saw exactly 1 player while `bothJoined` was false (expected in solo; in duo it means full-room confirmation failed).
+- `PROBE_BOTH_JOINED`: `bothJoined` was set after both players were detected (mirrors on-screen toast `探针:对局满员`).
+- `PROBE_SG1_ENTER` / `PROBE_SG3_BUTTONS`: progress inside `gstsServerSettleGame` (1 = entered, 3 = per-player UI loop finished); SG1 without SG3 means the UI loop aborted mid-way (mirrors toasts `探针:SG1/SG3`).
+- `PROBE_ABSENT_FIRE`: opponent-absent timeout (60s, `gstsServerSettleIfOpponentAbsent`) triggered settlement for the lone player.
+- `PROBE_DUMP_EVT_LEN_SG`: btn_test diagnostic dump; the next three numeric payloads are probeEvt / probeLen / probeSg.
+
+Legacy markers only in logs before 2026-06-10 (removed from code since):
+
 - `PROBE_STAGE_INIT_DONE`: stage initialization reached the probe.
 - `PROBE_DESTROY_FIRED`: a destroy/removal event fired.
 - `PROBE_LEFT_CHECK`: the next numeric value is the current player count check.
 - `PROBE_LEFT_FIRE`: player-left settlement fired.
-- `PROBE_BOTH_JOINED`: `bothJoined` was set after both players were detected.
-- `PROBE_SG_*`: settlement UI or settlement graph flow.
 - `PROBE_OUT_FIRST`: first out-of-board chess handling; the next value is usually the chess type.
 - `PROBE_OUT_REENTRY`: out-of-board handler re-entry was skipped or guarded.
 - `CHARGE_BEGIN_RECV`: BeginCharge signal was received.
