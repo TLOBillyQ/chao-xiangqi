@@ -16,12 +16,9 @@ g.server({
     let entity = _evt.signalSourceEntity.getPlayerEntityToWhichTheCharacterBelongs()
     if (entity == self) isForSelf = true
   }
-  print(str('CHARGE_STOP_RECV'))
   if (isForSelf) {
-    print(str('CHARGE_STOP_SELF'))
     if (self.get('ischarge').asType('bool')) {
       let powerPercent = f.getCustomVariable(self, 'chargePower').asType('float') / 100
-      print(str(powerPercent))
       //send('MoveForward')
 
       //销毁自身所有方向实体
@@ -74,8 +71,6 @@ g.server({
 
       //UI控制
       gstsServerHideUIByChargeStop(self)
-    } else {
-      print(str('CHARGE_STOP_NOTCHARGING'))
     }
   }
 })

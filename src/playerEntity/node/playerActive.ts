@@ -53,8 +53,6 @@ function gstsServerCreateDirectionIndicators(targetEntity: entity, controlEntity
   let curYaw = gsts.f.getEntityLocationAndRotation(targetEntity).rotate.y
   let initYaw = gsts.f.getCustomVariable(targetEntity, 'initYaw').asType('float')
   let deltaYaw = curYaw - initYaw
-  print(str('DIR_DELTA_YAW'))
-  print(str(deltaYaw))
 
   //先给一个默认值
   let dirList = list('vec3', [[0, 1, 0]])
