@@ -50,6 +50,11 @@ powershell -ExecutionPolicy Bypass -File .agents\skills\beyond-debug-log\scripts
 - `CHARGE_STOP_RECV`: StopCharge signal was received.
 - `CHARGE_STOP_SELF`: StopCharge matched the local player/character; the next numeric value is usually `powerPercent`.
 - `CHARGE_STOP_NOTCHARGING`: StopCharge arrived while `ischarge` was false.
+- `LAND_LAUNCH_V0`: piece launch; next value is launch speed `v0 = initSpeed * powerPercent`.
+- `LAND_PREDICT_DIST`: predicted landing distance computed at launch.
+- `LAND_ACTUAL_DIST`: straight-line distance from launch position, printed when the piece stops.
+- `LAND_PREDICT_DIST_AT_LAUNCH`: the prediction stored at launch, repeated at stop for pairing.
+- `LAND_TRIGGER_COUNT`: collision count at stop; calibration samples are only valid when this is `0` and no wall bounce occurred.
 
 ## Reading Rules
 
@@ -57,4 +62,6 @@ powershell -ExecutionPolicy Bypass -File .agents\skills\beyond-debug-log\scripts
 - Do not assume the latest visible editor log belongs to the current repo unless its `playerId` directory matches `gsts.config.ts`.
 - If `gsts.config.ts` has no `playerId`, list the directories under `BeyondLocal` and ask which player id to inspect.
 - If a marker is followed by a bare number, preserve the adjacency in the report. For example, `CHARGE_STOP_SELF -> 0.02` means the stop path computed a low power percent.
+- Print payloads sit after a record-prefix string that ends with `R` (seen as a standalone `R`, or merged like `@SR`). The bare `2` that appears after each timestamp is a metadata channel, not a print value — naive "first number after marker" pairing returns `2` for everything.
+- Reliable marker/value pairing recipe: extract printable strings, keep only strings whose predecessor matches `R$` (these are payloads), then pair each `LAND_`/`PROBE_`/`CHARGE_` payload with the next numeric payload.
 - Prefer a short timeline over raw dumps. Keep raw command output only when the user asks for it.

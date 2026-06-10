@@ -10,6 +10,11 @@ This file guides AI to write/modify code and docs in chao-xiangqi (超象棋：�
 - `docs/COMPILE_PITFALLS.md` / `docs/COMPILE_PITFALLS_ZH.md`: known compile/inject gotchas (e.g. `g.server` name vs file name, stale dist on rename).
 - `docs/Miliastra-knowledge/` (submodule): editor/engine knowledge base (official FAQ, BBS Q&A, node and control SVG references). Authoritative source for editor-side capabilities (UI controls, skills, components); grep here before inferring editor behavior from API names.
 
+## Project Skills
+Skills below live under `.claude/skills/<name>/SKILL.md`. The `.claude/skills` path is a symlink to `.agents/skills/` so the same file is also picked up by Qoder CLI CN. When adding a new skill, create it under `.agents/skills/<name>/SKILL.md` and list it here.
+
+- `beyond-debug-log` — analyze Miliastra/Genshin-TS runtime probe logs from `Beyond_Debug_Log` `.gia` files, correlating editor log entries with this project's `gsts.config.ts` `playerId`, injected map, and probe markers (`PROBE_*`, `CHARGE_*`, `LAND_*`).
+
 ## Compilation Flow (Debugging)
 1. TS -> `.gs.ts` (node function call form)
 2. `.gs.ts` -> IR `.json` (nodes and connections)
