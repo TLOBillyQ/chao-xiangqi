@@ -37,7 +37,14 @@ powershell -ExecutionPolicy Bypass -File .agents\skills\beyond-debug-log\scripts
 
 ## Probe Meanings In This Project
 
-No probes are active in the current build (all removed after the 2026-06-10 settlement diagnosis). The sections below decode historical logs.
+No probes are active in the current build (all removed after the 2026-06-11 switch-camera diagnosis). The sections below decode historical logs.
+
+Switch-camera diagnosis probes (only in logs from 2026-06-10/11 builds):
+
+- `PROBE_UIBTN_groupIndex` / `PROBE_UIBTN_compositeIndex`: fired at `whenUiControlGroupIsTriggered` entry for EVERY UI control event; the next numeric payload is the index. A button ID never appearing here means the editor never emitted the interaction event for it (e.g. 按键类型 not 交互事件).
+- `PROBE_CAM_ENTER` / `PROBE_CAM_GOT_VAR` / `PROBE_CAM_NAME` / `PROBE_CAM_SWITCH_DONE`: progress through the old `switchMainCameraTemplate`-based switch-camera branch; the payload after `PROBE_CAM_NAME` is the camera template name.
+- `PROBE_CAM3_ENTRY`: the rewritten branch using `setPlayerCameraToFollowEntity`; the next payload is the 物件镜头 entry name passed (玩家N镜头 / 物件镜头_2).
+- `PROBE_SCAN_*`: user-side btn_test dump checking whether a ScanEntity follows the player (positions/distance/tag payloads).
 
 Leave-settlement diagnosis probes (only in logs from 2026-06-10 builds):
 

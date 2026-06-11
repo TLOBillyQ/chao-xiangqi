@@ -7,7 +7,7 @@ const config: GstsConfig = {
   lang: 'zh-CN',
   inject: {
     playerId: 342478178,
-    mapId: 1073741863,
+    mapId: 1073741864,
     nodeGraphId: 1073741842
   }
 }

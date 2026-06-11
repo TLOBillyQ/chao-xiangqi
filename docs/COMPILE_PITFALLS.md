@@ -25,3 +25,13 @@ Language note:
 **Example**: After renaming `Gameinit.ts` to `ChessInit.ts`, `dist/src/Gameinit.json` (id 1073741842) lingers and collides with the new `ChessInit.json` on the same id.
 
 **Fix**: After renaming or deleting source files, run `rm -rf dist` then `npm run build` for a full rebuild before injecting. `dist` is generated output and safe to delete (`CLAUDE.md` also forbids hand-editing `dist`).
+
+## 3. Injecting while the editor has the map open gets overwritten by the editor's save
+
+**Symptom**: Injection succeeds (logs all green, scanning the save finds the injected content), but the new feature does nothing in playtest; scanning the save again later shows every injected graph, custom variable, and print is gone — only editor-authored resources (UI controls, camera templates) remain.
+
+**Cause**: Once the editor opens a map it holds the whole level in memory. Injection only modifies the `.gil` on disk; the editor never notices. The next editor save (triggered by starting a playtest, leaving the map, etc. — fingerprint: `.gil`, `Beyond_Local_Save_Player.gip`, and the `Temp\` copies all written in the same second) writes the stale in-memory state back to disk, reverting everything injected. Playtest also runs from the in-memory state, so "re-open the playtest after injecting" both fails to pick up the feature and destroys the on-disk injection.
+
+**Example**: 2026-06-10 "switch-camera button dead" hunt: at 21:46 the injected `isVerticalCam` and button-branch constant were scannable in the save; after the editor's 21:59:20 save they were all gone — the button did nothing, and with 0 prints in the running graphs no `Beyond_Debug_Log` file was even created.
+
+**Fix**: Before injecting, fully leave the map in the editor (back to the map list/home), then `npm run build`, then re-open the map. To check for a clobber: scan the `.gil` for a code-only string (e.g. a custom variable name); `.gil`+`.gip`+`Temp` written in the same second is the editor-save fingerprint.

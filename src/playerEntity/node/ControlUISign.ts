@@ -1,5 +1,6 @@
 import { UIControlGroupStatus } from 'genshin-ts/definitions/enum'
 import { g } from 'genshin-ts/runtime/core'
+import { entity } from 'genshin-ts/runtime/value'
 
 import { EntityTag } from '../../Global'
 import { Signal } from '../../resources/signals'
@@ -24,9 +25,37 @@ g.server({
   id: 1073741844,
   name: 'changeDir'
 }).on('whenUiControlGroupIsTriggered', (_evt, _f) => {
-  // 点击「结算」按钮 → 真正结算；左右按钮 → 切换方向。
+  // 点击「结算」按钮 → 真正结算；「查看规则」→ 隐藏标题；左右按钮 → 切换方向。
   if (_evt.uiControlGroupIndex == UIControl.btn_settle) {
     gstsServerConfirmSettle()
+  } else if (_evt.uiControlGroupIndex == UIControl.btn_viewRules) {
+    // 规则交互页由编辑器侧配置打开，这里负责隐藏开局 UI，避免盖在规则页上：
+    // 标题及其动效成员关闭；三个按钮组用 Hidden（按钮样式内嵌动效层级恒在规则页之上，
+    // 必须整组隐藏才能带走动效；Hidden 保留按钮状态，恢复时不重置准备中/开始状态）
+    _evt.eventSourceEntity.setUiControlStatus(UIControl.ui_titleFx1, UIControlGroupStatus.Off)
+    _evt.eventSourceEntity.setUiControlStatus(UIControl.ui_titleFxFull, UIControlGroupStatus.Off)
+    _evt.eventSourceEntity.setUiControlStatus(UIControl.ui_titleFx2, UIControlGroupStatus.Off)
+    _evt.eventSourceEntity.setUiControlStatus(UIControl.ui_title, UIControlGroupStatus.Off)
+    _evt.eventSourceEntity.setUiControlStatus(UIControl.btn_Ready, UIControlGroupStatus.Hidden)
+    _evt.eventSourceEntity.setUiControlStatus(UIControl.ui_enemyInfo, UIControlGroupStatus.Hidden)
+    _evt.eventSourceEntity.setUiControlStatus(UIControl.btn_viewRules, UIControlGroupStatus.Hidden)
+    _evt.eventSourceEntity.set('titleHiddenByRule', true)
+  } else if (_evt.uiControlGroupIndex == UIControl.btn_switchCamera) {
+    //「切换视角」：对局视角和垂直视角都是物件镜头，挂在每个玩家各自的镜头挂载实体上
+    //（玩家1=GUID 1077937005，玩家2=GUID 1077937007），与开局进入对局视角的编辑器图同一机制。
+    //设置玩家镜头跟随实体 的字符串参数是物件镜头【条目名】而非主镜头管理模板名：
+    //垂直条目在编辑器里名为「物件镜头_2」（自动命名），对局条目名为「玩家N镜头」
+    let camPlayer = _evt.eventSourceEntity
+    let toVertical = !camPlayer.get('isVerticalCam').asType('bool')
+    let entryName = '玩家2镜头'
+    if (camPlayer == (player(1) as entity)) entryName = '玩家1镜头'
+    if (toVertical) entryName = '物件镜头_2'
+    if (camPlayer == (player(1) as entity)) {
+      _f.setPlayerCameraToFollowEntity(camPlayer, _f.queryEntityByGuid(1077937005n), entryName)
+    } else {
+      _f.setPlayerCameraToFollowEntity(camPlayer, _f.queryEntityByGuid(1077937007n), entryName)
+    }
+    camPlayer.set('isVerticalCam', toVertical)
   } else if (
     _evt.uiControlGroupCompositeIndex == UIControl.changeDir.left ||
     _evt.uiControlGroupCompositeIndex == UIControl.changeDir.right
@@ -58,6 +87,27 @@ g.server({
 
     controlEntity.set('curDirIndex', newIndex)
     controlEntity.setUiControlStatus(dirList[idx(int(newIndex))], UIControlGroupStatus.On)
+  }
+})
+
+g.server({
+  id: 1073741844,
+  name: 'rulePageInteraction'
+}).on('whenFloatingInteractionPageIsTriggered', (_evt, _f) => {
+  // 点关闭按钮收起规则页时，若标题是被「查看规则」隐藏的则恢复显示
+  // （局内查看规则同样会经过这里，但标记为 false，不会误把开局标题弹出来）
+  if (_evt.interactiveItemIndex == UIControl.btn_closeRulePage) {
+    let conPlayer = _evt.playerEntity
+    if (conPlayer.get('titleHiddenByRule').asType('bool')) {
+      conPlayer.setUiControlStatus(UIControl.ui_title, UIControlGroupStatus.On)
+      conPlayer.setUiControlStatus(UIControl.ui_titleFx1, UIControlGroupStatus.On)
+      conPlayer.setUiControlStatus(UIControl.ui_titleFxFull, UIControlGroupStatus.On)
+      conPlayer.setUiControlStatus(UIControl.ui_titleFx2, UIControlGroupStatus.On)
+      conPlayer.setUiControlStatus(UIControl.btn_Ready, UIControlGroupStatus.On)
+      conPlayer.setUiControlStatus(UIControl.ui_enemyInfo, UIControlGroupStatus.On)
+      conPlayer.setUiControlStatus(UIControl.btn_viewRules, UIControlGroupStatus.On)
+      conPlayer.set('titleHiddenByRule', false)
+    }
   }
 })
 

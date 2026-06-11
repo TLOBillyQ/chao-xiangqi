@@ -107,6 +107,24 @@ export const ui_winPanel = 1073742676n
 //失败面板：结算时给输家显示
 export const ui_losePanel = 1073742720n
 
+//开局页面标题
+export const ui_title = 1073742503n
+//准备按钮（按钮样式内嵌动效，查看规则时需隐藏整组，否则动效盖在规则页上）
+export const btn_Ready = 1073742516n
+//开局页面的标题动效：标题隐藏时需一并关闭，否则特效仍在播放
+//其中 2514 是全屏界面动效，层级恒在所有层级之上（含悬浮交互页），必须显式关闭
+export const ui_titleFx1 = 1073742513n
+export const ui_titleFxFull = 1073742514n
+export const ui_titleFx2 = 1073742515n
+//查看规则
+export const btn_viewRules = 1073742518n
+//开局页面敌方信息
+export const ui_enemyInfo = 1073742517n
+//规则悬浮交互页的关闭按钮
+export const btn_closeRulePage = 1073742936n
+//切换视角按钮：在 玩家N镜头 / 玩家N垂直镜头 间来回切换
+export const btn_switchCamera = 1073744024n
+
 // TODO: 以下 UI 常量暂未被代码引用，待 UI 功能实现后使用或清理
 //重开按钮
 export const btn_reGame = 1073742690n
@@ -114,10 +132,6 @@ export const btn_reGame = 1073742690n
 export const btn_exitGame = 1073742675n
 //点赞按钮
 export const btn_showLike = 1073742674n
-//准备按钮
-export const btn_Ready = 1073742516n
-//查看规则
-export const btn_viewRules = 1073742518n
 //局内查看规则
 export const btn_viewRulesInGame = 1073742875n
 
