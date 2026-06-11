@@ -3,9 +3,10 @@ export const changeDir = {
   right: 1073742737n
 }
 
-//蓄力按钮
-export const chargeBegin = 1073742797n
-export const chargeProgress = 1073742741n
+//蓄力按钮（地图 1073741864 上为 1073741988；旧图残留的同名控件组 1073742797 不在当前 HUD）
+export const chargeBegin = 1073741988n
+//蓄力条：与蓄力按钮同面板成组（1073741984 蓄力条 / 1073741985 进度条 / 1073741988 蓄力按钮）
+export const chargeProgress = 1073741984n
 
 export const theEightDir = {
   top: 1073742745,
