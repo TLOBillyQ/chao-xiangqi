@@ -42,6 +42,39 @@ export function gstsServerPredictMoveDistance(v0: number) {
 }
 
 /**
+ * 沿单位方向 worldDir 在 XZ 平面做射线-圆相交，求滑行路径上首个棋子的接触距离
+ * 接触发生在圆心距 2*radius 处（与 gstsServerRealDir 的 Sqrt(4-...) 同一模型）
+ * 只预测第一次碰撞，不模拟碰后动量传递；无碰撞则返回 maxDist
+ */
+export function gstsServerFirstHitDistance(piece: entity, worldDir: vec3, maxDist: number) {
+  let best = maxDist
+  let piecePos = piece.pos
+  let contactSq = 2 * Global.radius * (2 * Global.radius)
+  let pieceList = gsts.f.getEntityListByUnitTag(Global.EntityTag.Piece)
+  for (let i = 0; i < pieceList.length; i++) {
+    if (pieceList[i] != piece) {
+      let targetPos = pieceList[i].pos
+      let dx = targetPos.x - piecePos.x
+      let dz = targetPos.z - piecePos.z
+      let t = dx * worldDir.x + dz * worldDir.z
+      if (t > 0) {
+        let perpSq = dx * dx + dz * dz - t * t
+        if (perpSq < contactSq) {
+          let tHit = t - Mathf.Sqrt(contactSq - perpSq)
+          if (tHit < 0) {
+            tHit = 0
+          }
+          if (tHit < best) {
+            best = tHit
+          }
+        }
+      }
+    }
+  }
+  return best
+}
+
+/**
  * 销毁场上所有落点指示
  */
 export function gstsServerDestroyLandingMarker() {
@@ -70,6 +103,7 @@ export function gstsServerSpawnLandingMarker(spawnPos: vec3, ownerPiece: entity)
 
 /**
  * 预计落点对账：每个蓄力tick按真实减速模型预计算运动距离并放置落点
+ * 路径上有棋子则截断到首次接触点（见 gstsServerFirstHitDistance）
  * 缺失则生成；与预计算位置偏差>0.5（含功率增长/归零回弹/中途切方向）则就地重建；预计点越界则钳在墙边
  */
 export function gstsServerReconcileLandingMarker(curPlayer: entity) {
@@ -101,6 +135,8 @@ export function gstsServerReconcileLandingMarker(curPlayer: entity) {
 
     let v0 = (initSpeed * chargePower) / 100
     let d = gstsServerPredictMoveDistance(v0)
+    //路径上有棋子则截断到首次接触点
+    d = gstsServerFirstHitDistance(piece, worldDir, d)
 
     let piecePos = piece.pos
     let ex = piecePos.x + worldDir.x * d

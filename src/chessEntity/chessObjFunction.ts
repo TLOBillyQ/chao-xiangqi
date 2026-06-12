@@ -14,8 +14,9 @@ export function gstsServerConfirmAndMovePiece(
   let motherEntity = gsts.f.getOwnerEntity(dirEntity)
   let moveVec = gsts.f.getCustomVariable(dirEntity, 'moveVec').asType('vec3')
   let relVec = gstsServerVec3ToVec2(moveVec)
-  //发射随机偏差 ±5°，存储的moveVec与运动器共用偏转后的同一向量，碰撞物理保持一致
-  let deviation = gsts.f.getRandomFloatingPointNumber(-5, 5)
+  //发射随机偏差 ±AngleRand°（关卡实体整型自定义变量，编辑器默认值5），存储的moveVec与运动器共用偏转后的同一向量，碰撞物理保持一致
+  let angleRand = float(Global.getServerStageEntity().get('AngleRand').asType('int'))
+  let deviation = gsts.f.getRandomFloatingPointNumber(0 - angleRand, angleRand)
   relVec = gsts.f._3dVectorRotation(gsts.f.create3dVector(0, deviation, 0), relVec)
   motherEntity.set('isStart', true)
   motherEntity.mountLoopingSpecialEffect(
