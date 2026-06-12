@@ -13,7 +13,7 @@ g.server({
   self.set('isVerticalCam', false)
   f.startTimer(self, 'sendCurStageToOther', true, [3])
   //初始化镜头
-  f.setPlayerCameraToFollowEntity(self, f.queryEntityByGuid(1077936985n), '准备镜头')
+  f.setPlayerCameraToFollowEntity(self, f.queryEntityByGuid(1077937005n), '物件镜头_2')
   f.activateDisableModelDisplay(self.character, false)
 })
 

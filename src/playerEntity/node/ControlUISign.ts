@@ -41,21 +41,9 @@ g.server({
     _evt.eventSourceEntity.setUiControlStatus(UIControl.btn_viewRules, UIControlGroupStatus.Hidden)
     _evt.eventSourceEntity.set('titleHiddenByRule', true)
   } else if (_evt.uiControlGroupIndex == UIControl.btn_switchCamera) {
-    //「切换视角」：对局视角和垂直视角都是物件镜头，挂在每个玩家各自的镜头挂载实体上
-    //（玩家1=GUID 1077937005，玩家2=GUID 1077937007），与开局进入对局视角的编辑器图同一机制。
-    //设置玩家镜头跟随实体 的字符串参数是物件镜头【条目名】而非主镜头管理模板名：
-    //垂直条目在编辑器里名为「物件镜头_2」（自动命名），对局条目名为「玩家N镜头」
+    //「切换视角」：全流程使用 镜头1（GUID 1077937005）的 物件镜头_2
     let camPlayer = _evt.eventSourceEntity
-    let toVertical = !camPlayer.get('isVerticalCam').asType('bool')
-    let entryName = '玩家2镜头'
-    if (camPlayer == (player(1) as entity)) entryName = '玩家1镜头'
-    if (toVertical) entryName = '物件镜头_2'
-    if (camPlayer == (player(1) as entity)) {
-      _f.setPlayerCameraToFollowEntity(camPlayer, _f.queryEntityByGuid(1077937005n), entryName)
-    } else {
-      _f.setPlayerCameraToFollowEntity(camPlayer, _f.queryEntityByGuid(1077937007n), entryName)
-    }
-    camPlayer.set('isVerticalCam', toVertical)
+    _f.setPlayerCameraToFollowEntity(camPlayer, _f.queryEntityByGuid(1077937005n), '物件镜头_2')
   } else if (
     _evt.uiControlGroupCompositeIndex == UIControl.changeDir.left ||
     _evt.uiControlGroupCompositeIndex == UIControl.changeDir.right
