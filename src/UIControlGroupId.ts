@@ -128,7 +128,7 @@ export const btn_viewRules = 1073742518n
 export const ui_enemyInfo = 1073742517n
 //规则悬浮交互页的关闭按钮
 export const btn_closeRulePage = 1073742936n
-//切换视角按钮：在 玩家N镜头 / 玩家N垂直镜头 间来回切换
+//切换视角按钮：进行中在 垂直 / 斜45 视角间来回切换
 export const btn_switchCamera = 1073744024n
 
 // TODO: 以下 UI 常量暂未被代码引用，待 UI 功能实现后使用或清理

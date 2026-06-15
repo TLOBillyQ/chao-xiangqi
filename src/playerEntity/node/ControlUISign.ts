@@ -1,6 +1,5 @@
 import { UIControlGroupStatus } from 'genshin-ts/definitions/enum'
 import { g } from 'genshin-ts/runtime/core'
-import { entity } from 'genshin-ts/runtime/value'
 
 import { EntityTag } from '../../Global'
 import { Signal } from '../../resources/signals'
@@ -40,10 +39,20 @@ g.server({
     _evt.eventSourceEntity.setUiControlStatus(UIControl.ui_enemyInfo, UIControlGroupStatus.Hidden)
     _evt.eventSourceEntity.setUiControlStatus(UIControl.btn_viewRules, UIControlGroupStatus.Hidden)
     _evt.eventSourceEntity.set('titleHiddenByRule', true)
+  } else if (_evt.uiControlGroupIndex == UIControl.btn_Ready) {
+    //点「准备」进入对局：默认切到垂直视角（实体「镜头1」GUID 1077937005 上的物件镜头条目「垂直」）
+    //本事件只有触发交互的玩家节点图能收到，故 self 即点击「准备」的玩家
+    self.set('isVerticalCam', true)
+    _f.setPlayerCameraToFollowEntity(self, _f.queryEntityByGuid(1077937005n), '垂直')
   } else if (_evt.uiControlGroupIndex == UIControl.btn_switchCamera) {
-    //「切换视角」：全流程使用 镜头1（GUID 1077937005）的 物件镜头_2
-    let camPlayer = _evt.eventSourceEntity
-    _f.setPlayerCameraToFollowEntity(camPlayer, _f.queryEntityByGuid(1077937005n), '物件镜头_2')
+    //「切换视角」：进行中在 垂直 / 斜45 间来回切（两者都是实体「镜头1」GUID 1077937005 上的物件镜头条目）
+    let toVertical = !self.get('isVerticalCam').asType('bool')
+    self.set('isVerticalCam', toVertical)
+    if (toVertical) {
+      _f.setPlayerCameraToFollowEntity(self, _f.queryEntityByGuid(1077937005n), '垂直')
+    } else {
+      _f.setPlayerCameraToFollowEntity(self, _f.queryEntityByGuid(1077937005n), '斜45')
+    }
   } else if (
     _evt.uiControlGroupCompositeIndex == UIControl.changeDir.left ||
     _evt.uiControlGroupCompositeIndex == UIControl.changeDir.right

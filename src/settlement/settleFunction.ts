@@ -68,6 +68,8 @@ export function gstsServerConfirmSettle() {
     } else {
       gsts.f.setPlayerSettlementSuccessStatus(p, SettlementStatus.Defeat)
     }
+    //结束回到准备相机（实体「镜头」GUID 1077936985 上的物件镜头条目「准备镜头」）
+    gsts.f.setPlayerCameraToFollowEntity(p, gsts.f.queryEntityByGuid(1077936985n), '准备镜头')
   }
   gsts.f.settleStage()
 }
