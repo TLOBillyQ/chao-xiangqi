@@ -39,6 +39,8 @@ export function gstsServerSettleGame(redWin: boolean) {
       } else {
         p.setUiControlStatus(ui_losePanel, UIControlGroupStatus.On)
       }
+      //结束（弹结算面板/切换界面布局那一刻）回到准备相机：实体「镜头」GUID 1077936985 的物件镜头条目「准备镜头」
+      gsts.f.setPlayerCameraToFollowEntity(p, gsts.f.queryEntityByGuid(1077936985n), '准备镜头')
     }
   }
 }
@@ -68,8 +70,6 @@ export function gstsServerConfirmSettle() {
     } else {
       gsts.f.setPlayerSettlementSuccessStatus(p, SettlementStatus.Defeat)
     }
-    //结束回到准备相机（实体「镜头」GUID 1077936985 上的物件镜头条目「准备镜头」）
-    gsts.f.setPlayerCameraToFollowEntity(p, gsts.f.queryEntityByGuid(1077936985n), '准备镜头')
   }
   gsts.f.settleStage()
 }
