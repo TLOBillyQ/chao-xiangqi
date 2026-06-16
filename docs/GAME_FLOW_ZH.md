@@ -27,7 +27,7 @@
 - **玩家创建**（`playerCreate.ts` / 图 `1073741828`）：`whenEntityIsCreated` 设置准备镜头跟随、隐藏角色模型；3 秒后 `send(chgPlayerStage)` 通知阶段切换。
 - **关卡创建**（`ChessInit.ts` / 图 `1073741842`）：`whenEntityIsCreated` 启动 `CheckChessMovestage` 循环定时器（3s），并初始化 `canChange=true`、`settled=false`。
 - **棋子创建**（`chessObjNode.ts` / 图 `1073741834`）：每枚棋子 `whenEntityIsCreated` 初始化 `triggerCount=0`、`isStart=false`。
-- 棋子初始坐标与预制映射见 `Global.initPos`（红/黑各 16 枚）。
+- 棋子初始坐标与预制映射见 `contracts/stage.ts` 的 `initPos`（红/黑各 16 枚）。
 
 ## 2. 选子（点击棋子）
 
@@ -45,7 +45,7 @@
 
 `ControlUISign.ts` / 图 `1073741844`，`whenUiControlGroupIsTriggered`：
 
-- 根据 `curChessType` 取对应方向控件 ID 列表（`UIControlGroupId.dirContrlId`），棋子方向 UI 组 ID 见 `redPieceDirectionUi` / `blackPieceDirectionUi`。
+- 根据 `curChessType` 取对应方向控件 ID 列表（`contracts/editorIds.ts` 的 `dirContrlId`），棋子方向 UI 组 ID 见 `redPieceDirectionUi` / `blackPieceDirectionUi`。
 - 左 / 右按钮（`changeDir.left/right`）循环 `curDirIndex`，关闭旧高亮、打开新高亮。
 
 ## 4. 蓄力
@@ -60,7 +60,7 @@
 `StopCharge.ts` / 图 `1073741838`，`Signal.StopCharge`：
 
 1. `powerPercent = chargePower / 100`。
-2. 遍历场上方向指示预制，找到 `dirUIIndex == curDirIndex` 的那一个，调用 `gstsServerConfirmAndMovePiece`（`chessObjFunction.ts`）：
+2. 遍历场上方向指示预制，找到 `dirUIIndex == curDirIndex` 的那一个，调用 `gstsServerConfirmAndMovePiece`（`systems/piece/launch.ts`）：
    - 将该方向 `moveVec` 三维转二维（`gstsServerVec3ToVec2`），棋子 `isStart=true`，挂拖尾光效。
    - 加入 `moveList`，记录玩家 `startPos`。
    - 兵过河后 `initSpeed` 提升为 25。
@@ -70,7 +70,7 @@
 
 ## 6. 运动 / 碰撞 / 反弹
 
-- **速度插值**（`triggerFunction.ts` `gstsServerMoveChangeTick`，由 `moveActChange` 图 `1073741833` 的 `MoveActive` / `MoveActiveTriggerBefore` 定时器驱动）：每 tick 按阻尼系数衰减速度；速度 < 0.1 时停止运动器、清理 `triggerCount/isStart/moveVec/triggerGuidList` 与相关定时器。
+- **速度插值**（`systems/motion/movement.ts` `gstsServerMoveChangeTick`，由 `moveActChange` 图 `1073741833` 的 `MoveActive` / `MoveActiveTriggerBefore` 定时器驱动）：每 tick 按阻尼系数衰减速度；速度 < 0.1 时停止运动器、清理 `triggerCount/isStart/moveVec/triggerGuidList` 与相关定时器。
   - `MoveActiveTriggerBefore` 用较小阻尼 `deltaMoveTriggerBefore`；碰撞后切到 `MoveActive` 用 `deltaMove`。
 - **棋子互撞**（`triggerNode.ts` 图 `1073741827`，`whenOnHitDetectionIsTriggered`）：
   - 双方各 `triggerCount += 1`，都加入 `moveList`，并用 `triggerGuidList` 去重避免重复结算同一对碰撞。
@@ -79,7 +79,7 @@
 
 ## 7. 静止判定与回合切换
 
-`ChangeControl.ts`：
+`systems/turn/turnState.ts`：
 
 - `CheckChessMovestage`（图 `1073741842` 定时器，3s）扫描 `moveList`，移除速度 < 0.1 的棋子；当 `moveList` 清空时调用 `gstsServerSwitchTurn`。
 - `gstsServerSwitchTurn`：读取当前 `curPlayer` 阵营，在 `canChange=true` 时：
@@ -95,11 +95,11 @@
 
 ## 9. 出界与结算
 
-- **出界**（`triggerFunction.ts` `gstsServerOutCheck`，由 `OutCheck` 定时器驱动）：棋子坐标越过 `Wall` 边界即判定出界 →
+- **出界**（`systems/motion/outOfBounds.ts` `gstsServerOutCheck`，由 `OutCheck` 定时器驱动）：棋子坐标越过 `Wall` 边界即判定出界 →
   - 记录棋子是否为将/帅、被吃方是否红方；停掉运动器与检测定时器。
   - 按出界方向播放翻落动画，1s 后下落 + 落地特效，3s 后 `destroy()`。
-  - 若被吃的是将/帅，落子动画结束后调用 `Settle.gstsServerSettleGame(redWin)` 结算整局。
-- **玩家中途退出**（`settleFunction.ts` `gstsServerSettleIfPlayerLeft`，由 stage 图 `whenEntityIsRemovedDestroyed` 触发）：引擎无「玩家离开」事件，借实体移除事件 + 在场玩家数判定；在场仅剩 1 人时，剩余方判胜并结算。
+  - 若被吃的是将/帅，落子动画结束后调用 `systems/settlement/settlement.ts` 的 `gstsServerSettleGame(redWin)` 结算整局。
+- **玩家中途退出**（`systems/settlement/settlement.ts` `gstsServerSettleIfPlayerLeft`，由 stage 图 `whenEntityIsRemovedDestroyed` 触发）：引擎无「玩家离开」事件，借实体移除事件 + 在场玩家数判定；在场仅剩 1 人时，剩余方判胜并结算。
 - **一次性结算**（`gstsServerSettleGame`）：用 stage 的 `settled` 标记保证整局只结算一次；按 `redWin` 给双方设胜负，调用 `settleStage()` 弹出个人结算界面。
   - 前置：编辑器侧需在【关卡设置 - 结算】配置「个人结算」与计分 / 排名模板。
 

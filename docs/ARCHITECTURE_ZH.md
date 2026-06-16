@@ -16,7 +16,7 @@ L1 core/                  通用 helper：向量、碰撞物理
 L0 contracts/ resources/  编辑器契约、资源生成文件、常量与关卡实体访问
 ```
 
-旧入口文件 `Global.ts`、`Tool.ts`、`UIControlGroupId.ts`、`ChangeControl.ts`、`chessEntity/chessObjFunction.ts`、`chargePower/chargeFunction.ts`、`trigger/triggerFunction.ts`、`settlement/settleFunction.ts` 目前保留为兼容 re-export，便于外部引用逐步迁移；新增代码应直接 import `contracts/`、`core/`、`systems/`。
+旧入口文件（`Global.ts`、`Tool.ts`、`UIControlGroupId.ts`、`ChangeControl.ts` 及 `chessEntity/`、`chargePower/`、`trigger/`、`settlement/` 下的兼容壳）已在 ADR 0001 收尾时全部删除；代码统一直接从 `contracts/`、`core/`、`systems/` import，`src/` 只保留 `contracts / resources / core / systems / nodes` 五个目录。
 
 ## 目录职责
 
