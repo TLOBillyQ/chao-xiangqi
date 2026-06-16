@@ -47,20 +47,21 @@ g.server({
     //本事件只有触发交互的玩家节点图能收到，故 self 即点击的玩家；
     //对局镜头按玩家区分：玩家1(红)=镜头1(1077937005)，玩家2(黑)=镜头2(1077937034)，条目同名「垂直」「斜45」
     self.set('isVerticalCam', true)
-    let camGuid = 1077937034n
-    if (_f.queryEntityFaction(self) == factionRed) camGuid = 1077937005n
-    _f.setPlayerCameraToFollowEntity(self, _f.queryEntityByGuid(camGuid), '垂直')
+    //存「实体」而非 GUID：queryEntityByGuid 需 GUID 字面量，存 GUID 变量会被编成 int 局部量、IR 报 Invalid value type: guid
+    let camEntity = _f.queryEntityByGuid(1077937034n)
+    if (_f.queryEntityFaction(self) == factionRed) camEntity = _f.queryEntityByGuid(1077937005n)
+    _f.setPlayerCameraToFollowEntity(self, camEntity, '垂直')
   } else if (_evt.uiControlGroupIndex == UIControl.btn_switchCamera) {
     //「切换视角」：进行中在 垂直 / 斜45 间来回切（同一玩家镜头实体上的两个同名条目）
     //对局镜头按玩家区分：玩家1(红)=镜头1(1077937005)，玩家2(黑)=镜头2(1077937034)
     let toVertical = !self.get('isVerticalCam').asType('bool')
     self.set('isVerticalCam', toVertical)
-    let camGuid = 1077937034n
-    if (_f.queryEntityFaction(self) == factionRed) camGuid = 1077937005n
+    let camEntity = _f.queryEntityByGuid(1077937034n)
+    if (_f.queryEntityFaction(self) == factionRed) camEntity = _f.queryEntityByGuid(1077937005n)
     if (toVertical) {
-      _f.setPlayerCameraToFollowEntity(self, _f.queryEntityByGuid(camGuid), '垂直')
+      _f.setPlayerCameraToFollowEntity(self, camEntity, '垂直')
     } else {
-      _f.setPlayerCameraToFollowEntity(self, _f.queryEntityByGuid(camGuid), '斜45')
+      _f.setPlayerCameraToFollowEntity(self, camEntity, '斜45')
     }
   } else if (
     _evt.uiControlGroupCompositeIndex == UIControl.changeDir.left ||
