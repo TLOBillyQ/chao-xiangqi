@@ -1,7 +1,7 @@
 import { UIControlGroupStatus } from 'genshin-ts/definitions/enum'
 import { entity } from 'genshin-ts/runtime/value'
 
-import { factionRed } from '../../contracts/editorIds'
+import { factionBlack, factionRed } from '../../contracts/editorIds'
 import { getServerStageEntity } from '../../contracts/stage'
 import {
   GlobalTimer_BlackCountdown,
@@ -9,6 +9,75 @@ import {
   timersId
 } from '../../contracts/timers'
 import { gstsServerErrorMsg as ErrorMsg } from '../ui/broadcastUi'
+
+/**
+ * 首回合必须由代码统一初始化，不能依赖编辑器模板里 stage.curPlayer / 玩家 isControl 的默认值。
+ * 试玩可选择以 player1 或 player2 进入；单人试玩时在场玩家列表可能只有红方或只有黑方。
+ * 因此：双人在场时红方先手；单人试玩时谁在场就先让谁可操作，避免把控制权切给缺席玩家。
+ */
+export function gstsServerInitializeFirstTurnIfNeeded() {
+  let StageEntity = getServerStageEntity()
+  let turnInitialized = StageEntity.get('turnInitialized').asType('bool')
+
+  if (!turnInitialized) {
+    let players = gsts.f.getListOfPlayerEntitiesOnTheField()
+    if (players.length > 0) {
+      let redPlayer = players[0] as entity
+      let blackPlayer = players[0] as entity
+      let hasRedPlayer = false
+      let hasBlackPlayer = false
+
+      for (let i = 0; i < players.length; i++) {
+        players[i].set('isControl', false)
+        players[i].setUiControlStatus(timersId.red, UIControlGroupStatus.Off)
+        players[i].setUiControlStatus(timersId.black, UIControlGroupStatus.Off)
+
+        if (gsts.f.queryEntityFaction(players[i]) == factionRed) {
+          redPlayer = players[i] as entity
+          hasRedPlayer = true
+        } else if (gsts.f.queryEntityFaction(players[i]) == factionBlack) {
+          blackPlayer = players[i] as entity
+          hasBlackPlayer = true
+        }
+      }
+
+      let targetPlayer = redPlayer
+      let targetIsRed = true
+      let hasTargetPlayer = false
+
+      if (hasRedPlayer) {
+        targetPlayer = redPlayer
+        targetIsRed = true
+        hasTargetPlayer = true
+      } else if (hasBlackPlayer) {
+        targetPlayer = blackPlayer
+        targetIsRed = false
+        hasTargetPlayer = true
+      }
+
+      if (hasTargetPlayer) {
+        StageEntity.set('curPlayer', targetPlayer)
+        StageEntity.set('canChange', true)
+        StageEntity.set('turnInitialized', true)
+        targetPlayer.set('isControl', true)
+
+        if (targetIsRed) {
+          for (let i = 0; i < players.length; i++) {
+            players[i].setUiControlStatus(timersId.red, UIControlGroupStatus.On)
+          }
+          gsts.f.modifyGlobalTimer(StageEntity, GlobalTimer_BlackCountdown, -999)
+          gsts.f.startGlobalTimer(StageEntity, GlobalTimer_RedCountdown)
+        } else {
+          for (let i = 0; i < players.length; i++) {
+            players[i].setUiControlStatus(timersId.black, UIControlGroupStatus.On)
+          }
+          gsts.f.modifyGlobalTimer(StageEntity, GlobalTimer_RedCountdown, -999)
+          gsts.f.startGlobalTimer(StageEntity, GlobalTimer_BlackCountdown)
+        }
+      }
+    }
+  }
+}
 
 /**
  * 实时检测棋子状态
@@ -58,47 +127,103 @@ export function gstsServerSwitchTurn() {
   let playerEntity = StageEntity.get('curPlayer').asType('entity')
   let Faction = gsts.f.queryEntityFaction(playerEntity)
   let canChange = StageEntity.get('canChange').asType('bool')
+  let players = gsts.f.getListOfPlayerEntitiesOnTheField()
 
-  if (Faction == factionRed) {
-    if (canChange) {
-      ErrorMsg('<color=#000000>黑方回合</color>', player(1) as entity, false)
-      ErrorMsg('<color=#000000>黑方回合</color>', player(2) as entity, true)
-      player(1).setUiControlStatus(timersId.red, UIControlGroupStatus.Off)
-      player(2).setUiControlStatus(timersId.red, UIControlGroupStatus.Off)
-      //启动黑方倒计时
-      //切换保护 避免短时间内频繁切换导致错误
-      StageEntity.set('canChange', false)
-      playerEntity.set('isControl', false)
-      gsts.f.modifyGlobalTimer(StageEntity, GlobalTimer_RedCountdown, -999)
-      setTimeout((_e) => {
-        StageEntity.set('canChange', true)
-        player(2).set('isControl', true)
-        player(1).setUiControlStatus(timersId.black, UIControlGroupStatus.On)
-        player(2).setUiControlStatus(timersId.black, UIControlGroupStatus.On)
-        StageEntity.set('curPlayer', player(2))
-        gsts.f.startGlobalTimer(StageEntity, GlobalTimer_BlackCountdown)
-      }, 2000)
+  if (players.length > 0) {
+    let redPlayer = players[0] as entity
+    let blackPlayer = players[0] as entity
+    let hasRedPlayer = false
+    let hasBlackPlayer = false
+
+    for (let i = 0; i < players.length; i++) {
+      if (gsts.f.queryEntityFaction(players[i]) == factionRed) {
+        redPlayer = players[i] as entity
+        hasRedPlayer = true
+      } else if (gsts.f.queryEntityFaction(players[i]) == factionBlack) {
+        blackPlayer = players[i] as entity
+        hasBlackPlayer = true
+      }
     }
-  } else {
-    if (canChange) {
-      ErrorMsg('<color=#FF0000>红方回合</color>', player(1) as entity, true)
-      ErrorMsg('<color=#FF0000>红方回合</color>', player(2) as entity, false)
 
-      player(1).setUiControlStatus(timersId.black, UIControlGroupStatus.Off)
-      player(2).setUiControlStatus(timersId.black, UIControlGroupStatus.Off)
-      //启动红方倒计时
+    let targetPlayer = redPlayer
+    let targetIsRed = true
+    let hasTargetPlayer = false
+
+    if (Faction == factionRed) {
+      if (hasBlackPlayer) {
+        targetPlayer = blackPlayer
+        targetIsRed = false
+        hasTargetPlayer = true
+      } else if (hasRedPlayer) {
+        targetPlayer = redPlayer
+        targetIsRed = true
+        hasTargetPlayer = true
+      }
+    } else {
+      if (hasRedPlayer) {
+        targetPlayer = redPlayer
+        targetIsRed = true
+        hasTargetPlayer = true
+      } else if (hasBlackPlayer) {
+        targetPlayer = blackPlayer
+        targetIsRed = false
+        hasTargetPlayer = true
+      }
+    }
+
+    if (canChange && hasTargetPlayer) {
+      if (targetIsRed) {
+        for (let i = 0; i < players.length; i++) {
+          ErrorMsg(
+            '<color=#FF0000>红方回合</color>',
+            players[i] as entity,
+            gsts.f.queryEntityFaction(players[i]) == factionRed
+          )
+        }
+      } else {
+        for (let i = 0; i < players.length; i++) {
+          ErrorMsg(
+            '<color=#000000>黑方回合</color>',
+            players[i] as entity,
+            gsts.f.queryEntityFaction(players[i]) == factionBlack
+          )
+        }
+      }
+
+      for (let i = 0; i < players.length; i++) {
+        players[i].set('isControl', false)
+        if (Faction == factionRed) {
+          players[i].setUiControlStatus(timersId.red, UIControlGroupStatus.Off)
+        } else {
+          players[i].setUiControlStatus(timersId.black, UIControlGroupStatus.Off)
+        }
+      }
+
       StageEntity.set('canChange', false)
-      playerEntity.set('isControl', false)
-      gsts.f.modifyGlobalTimer(StageEntity, GlobalTimer_BlackCountdown, -999)
-      //切换保护 避免短时间内频繁切换导致错误
+      StageEntity.set('turnInitialized', true)
+      if (Faction == factionRed) {
+        gsts.f.modifyGlobalTimer(StageEntity, GlobalTimer_RedCountdown, -999)
+      } else {
+        gsts.f.modifyGlobalTimer(StageEntity, GlobalTimer_BlackCountdown, -999)
+      }
 
       setTimeout((_e) => {
         StageEntity.set('canChange', true)
-        player(1).set('isControl', true)
-        player(1).setUiControlStatus(timersId.red, UIControlGroupStatus.On)
-        player(2).setUiControlStatus(timersId.red, UIControlGroupStatus.On)
-        StageEntity.set('curPlayer', player(1))
-        gsts.f.startGlobalTimer(StageEntity, GlobalTimer_RedCountdown)
+        targetPlayer.set('isControl', true)
+        let livePlayers = gsts.f.getListOfPlayerEntitiesOnTheField()
+        if (targetIsRed) {
+          for (let i = 0; i < livePlayers.length; i++) {
+            livePlayers[i].setUiControlStatus(timersId.red, UIControlGroupStatus.On)
+          }
+          StageEntity.set('curPlayer', targetPlayer)
+          gsts.f.startGlobalTimer(StageEntity, GlobalTimer_RedCountdown)
+        } else {
+          for (let i = 0; i < livePlayers.length; i++) {
+            livePlayers[i].setUiControlStatus(timersId.black, UIControlGroupStatus.On)
+          }
+          StageEntity.set('curPlayer', targetPlayer)
+          gsts.f.startGlobalTimer(StageEntity, GlobalTimer_BlackCountdown)
+        }
       }, 2000)
     }
   }

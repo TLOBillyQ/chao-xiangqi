@@ -10,20 +10,26 @@ g.server({
   name: 'playerTimers'
 }).on('whenGlobalTimerIsTriggered', (_evt, f) => {
   if (_evt.timerName == GlobalTimer_BlackCountdown && TurnState.gstsServerCanControl() == 1) {
-    let player = f.getEntityListBySpecifiedFaction(
+    let players = f.getEntityListBySpecifiedFaction(
       f.getListOfPlayerEntitiesOnTheField(),
       factionBlack
-    )[0]
-    if (player.get('ischarge').asType('bool')) send(Signal.StopCharge)
-    //else TurnState.gstsServerSwitchTurn_Test()
-    else TurnState.gstsServerSwitchTurn()
+    )
+    if (players.length > 0) {
+      let player = players[0]
+      if (player.get('ischarge').asType('bool')) send(Signal.StopCharge)
+      //else TurnState.gstsServerSwitchTurn_Test()
+      else TurnState.gstsServerSwitchTurn()
+    }
   } else if (_evt.timerName == GlobalTimer_RedCountdown && TurnState.gstsServerCanControl() == 1) {
-    let player = f.getEntityListBySpecifiedFaction(
+    let players = f.getEntityListBySpecifiedFaction(
       f.getListOfPlayerEntitiesOnTheField(),
       factionRed
-    )[0]
-    if (player.get('ischarge').asType('bool')) send(Signal.StopCharge)
-    //else TurnState.gstsServerSwitchTurn_Test()
-    else TurnState.gstsServerSwitchTurn()
+    )
+    if (players.length > 0) {
+      let player = players[0]
+      if (player.get('ischarge').asType('bool')) send(Signal.StopCharge)
+      //else TurnState.gstsServerSwitchTurn_Test()
+      else TurnState.gstsServerSwitchTurn()
+    }
   }
 })

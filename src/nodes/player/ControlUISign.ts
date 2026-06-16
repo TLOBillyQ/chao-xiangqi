@@ -41,9 +41,9 @@ g.server({
     _evt.uiControlGroupIndex == UIControl.btn_Ready ||
     _evt.uiControlGroupIndex == UIControl.btn_reGame
   ) {
-    gstsServerSwitchToVerticalCamera(self)
+    gstsServerSwitchToVerticalCamera(_evt.eventSourceEntity as typeof self)
   } else if (_evt.uiControlGroupIndex == UIControl.btn_switchCamera) {
-    gstsServerToggleBattleCamera(self)
+    gstsServerToggleBattleCamera(_evt.eventSourceEntity as typeof self)
   } else if (_evt.uiControlGroupCompositeIndex == UIControl.changeDir.left) {
     gstsServerSwitchDirectionUI(_evt.eventSourceEntity, true)
   } else if (_evt.uiControlGroupCompositeIndex == UIControl.changeDir.right) {

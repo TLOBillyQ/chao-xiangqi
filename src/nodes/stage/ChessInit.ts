@@ -5,14 +5,21 @@ import {
   gstsServerSettleIfOpponentAbsent,
   gstsServerSettleIfPlayerLeft
 } from '../../systems/settlement/settlement'
-import { gstsServerCheckPieceMovementState } from '../../systems/turn/turnState'
+import {
+  gstsServerCheckPieceMovementState,
+  gstsServerInitializeFirstTurnIfNeeded
+} from '../../systems/turn/turnState'
 
 g.server({
   id: 1073741842,
   name: 'ChessInitGraph'
 }).on('whenEntityIsCreated', (_evt, f) => {
   f.startTimer(self, 'CheckChessMovestage', true, [3])
+  let moveList = self.get('moveList').asType('entity_list')
+  gsts.f.clearList(moveList)
+  self.set('moveList', moveList)
   self.set('canChange', true)
+  self.set('turnInitialized', false)
   //结算一次性保护标记
   self.set('settled', false)
   //结算胜负结果（红方是否获胜），显示结算 UI 时写入、点击结算按钮时读回
@@ -28,6 +35,7 @@ g.server({
   id: 1073741842
 }).on('whenTimerIsTriggered', (_evt, _f) => {
   gstsServerRefreshBothJoined()
+  gstsServerInitializeFirstTurnIfNeeded()
   //对方从未加入时的缺席超时结算（约1分钟，见 OPPONENT_WAIT_TICKS）
   gstsServerSettleIfOpponentAbsent()
   gstsServerCheckPieceMovementState()

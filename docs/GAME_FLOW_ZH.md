@@ -8,7 +8,7 @@
 | 概念           | 说明                                                                                                                                                                                                                                                                                             |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 关卡实体 stage | guid `1094713345`，全局状态载体。变量：`moveList`（运动中棋子列表）、`curPlayer`（当前回合玩家）、`canChange`（允许切换回合）、`settled`（整局结算一次性保护）、`ErrorMsg`、全局定时器「红方倒计时 / 黑方倒计时」。                                                                              |
-| 玩家实体       | `player(1)`=红方=`faction(1)`，`player(2)`=黑方=`faction(4)`。变量：`isControl`（是否本回合操控权）、`ischarge`/`chargePower`（蓄力态与力度）、`curDirIndex`/`curChessType`/`curChooseChess`（当前选中棋子与方向）、`startPos`（本次发射出发点）、`step`（步数）、`ScanEntity`（扫描命中实体）。 |
+| 玩家实体       | `player(1)`=红方=`faction(1)`，`player(2)`=黑方=`faction(4)`。单人试玩会在【试玩时玩家编号】中固定进入 player1 或 player2，因此在场玩家列表可能只有红方或只有黑方。变量：`isControl`（是否本回合操控权）、`ischarge`/`chargePower`（蓄力态与力度）、`curDirIndex`/`curChessType`/`curChooseChess`（当前选中棋子与方向）、`startPos`（本次发射出发点）、`step`（步数）、`ScanEntity`（扫描命中实体）。 |
 | 棋子实体       | 变量：`棋子类型`（车/马/象/士/帅/炮/兵/兵过河）、`Mass`、`moveVec`（速度向量）、`initSpeed`（基础初速）、`triggerCount`（撞击次数）、`isStart`（是否本回合主动发射子）、`triggerGuidList`（已碰撞过的对象，去重用）。owner 指向所属玩家。                                                        |
 | 方向指示实体   | 选子后围绕棋子生成的箭头预制体。变量：`moveVec`（该方向单位向量）、`dirUIIndex`（与 UI 控件序号对应）。owner 指向目标棋子。红/黑各一种预制（`dirPrefabs`）。                                                                                                                                     |
 
@@ -24,8 +24,9 @@
 
 ## 1. 初始化
 
-- **玩家创建**（`playerCreate.ts` / 图 `1073741828`）：`whenEntityIsCreated` 设置准备镜头跟随、隐藏角色模型；3 秒后 `send(chgPlayerStage)` 通知阶段切换。
-- **关卡创建**（`ChessInit.ts` / 图 `1073741842`）：`whenEntityIsCreated` 启动 `CheckChessMovestage` 循环定时器（3s），并初始化 `canChange=true`、`settled=false`。
+- **玩家创建**（`playerCreate.ts` / 图 `1073741828`）：`whenEntityIsCreated` 重置玩家操控/蓄力/选子状态，设置准备镜头跟随、隐藏角色模型；3 秒后 `send(chgPlayerStage)` 通知阶段切换。
+- **关卡创建**（`ChessInit.ts` / 图 `1073741842`）：`whenEntityIsCreated` 启动 `CheckChessMovestage` 循环定时器（3s），清空 `moveList`，并初始化 `canChange=true`、`turnInitialized=false`、`settled=false`。
+- **首回合初始化**（`systems/turn/turnState.ts`）：定时器首次发现未初始化时按在场玩家设置 `curPlayer/isControl`；双人在场时红方先手，单人 player1/player2 试玩时谁在场就让谁先手，避免把操控权切给缺席玩家。
 - **棋子创建**（`chessObjNode.ts` / 图 `1073741834`）：每枚棋子 `whenEntityIsCreated` 初始化 `triggerCount=0`、`isStart=false`。
 - 棋子初始坐标与预制映射见 `contracts/stage.ts` 的 `initPos`（红/黑各 16 枚）。
 
@@ -83,9 +84,10 @@
 
 - `CheckChessMovestage`（图 `1073741842` 定时器，3s）扫描 `moveList`，移除速度 < 0.1 的棋子；当 `moveList` 清空时调用 `gstsServerSwitchTurn`。
 - `gstsServerSwitchTurn`：读取当前 `curPlayer` 阵营，在 `canChange=true` 时：
+  - 先从在场玩家列表里按阵营寻找红方/黑方实体，不直接假设两个玩家都在场。
   - 广播回合提示（`gstsServerErrorMsg`），关闭当前方倒计时 UI。
   - `canChange=false` 防抖，关掉当前方倒计时全局定时器。
-  - 延迟 2s 后切换 `curPlayer`、目标方 `isControl=true`、打开其倒计时 UI 并启动其倒计时全局定时器。
+  - 延迟 2s 后切换 `curPlayer`、目标方 `isControl=true`、打开其倒计时 UI 并启动其倒计时全局定时器；若目标方缺席（单人试玩），则保持当前在场方继续可操作。
 
 ## 8. 倒计时超时
 
