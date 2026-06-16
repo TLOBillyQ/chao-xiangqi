@@ -1,10 +1,16 @@
 import { g } from 'genshin-ts/runtime/core'
 import { entity } from 'genshin-ts/runtime/value'
 
-import { gstsServerAddMoveEntity } from '../ChangeControl'
-import * as Global from '../Global'
-import { gstsServerCalculateImpulse } from '../Tool'
-import { gstsServerMoveChangeTick, gstsServerOutCheck } from './triggerFunction'
+import { deltaMove, deltaMoveTriggerBefore } from '../../contracts/physics'
+import {
+  Tick_MoveActive,
+  Tick_MoveActiveTriggerBefore,
+  Tick_OutCheck
+} from '../../contracts/timers'
+import { gstsServerCalculateImpulse } from '../../core/physics'
+import { gstsServerMoveChangeTick } from '../../systems/motion/movement'
+import { gstsServerOutCheck } from '../../systems/motion/outOfBounds'
+import { gstsServerAddMoveEntity } from '../../systems/turn/turnState'
 
 //九宫格范围检测
 g.server({
@@ -17,8 +23,8 @@ g.server({
     let selfEntity = f.getSelfEntity()
 
     //移除当前移动前定时器
-    enteringEntity.stopTimer(Global.Tick_MoveActiveTriggerBefore)
-    selfEntity.stopTimer(Global.Tick_MoveActiveTriggerBefore)
+    enteringEntity.stopTimer(Tick_MoveActiveTriggerBefore)
+    selfEntity.stopTimer(Tick_MoveActiveTriggerBefore)
 
     //添加特效
     enteringEntity.playTimedEffects(
@@ -103,7 +109,7 @@ g.server({
         enteringEntity.set('moveVec', moveVec)
         gsts.f.addUniformBasicLinearMotionDevice(enteringEntity, 'forwardMove', 99, moveVec)
         //增加摩擦力影响速度变化
-        gsts.f.startTimer(enteringEntity, Global.Tick_MoveActive, true, [0.03])
+        gsts.f.startTimer(enteringEntity, Tick_MoveActive, true, [0.03])
       } else if (selfPieceType == '炮' && selfTriCount == 0 && selfisStart) {
         //炮的初始加速度
         let baseVec = Vector3.Normalize(self.get('moveVec').asType('vec3'))
@@ -122,7 +128,7 @@ g.server({
         self.set('moveVec', moveVec)
         gsts.f.addUniformBasicLinearMotionDevice(self, 'forwardMove', 99, moveVec)
         //增加摩擦力影响速度变化
-        gsts.f.startTimer(self, Global.Tick_MoveActive, true, [0.03])
+        gsts.f.startTimer(self, Tick_MoveActive, true, [0.03])
       } else {
         gstsServerCalculateImpulse(enteringEntity, selfEntity)
       }
@@ -134,8 +140,8 @@ g.server({
   id: 1073741833,
   name: 'moveActChange'
 }).on('whenTimerIsTriggered', (_evt, _f) => {
-  if (_evt.timerName == Global.Tick_MoveActive) gstsServerMoveChangeTick(Global.deltaMove)
-  else if (_evt.timerName == Global.Tick_OutCheck) gstsServerOutCheck(self)
-  else if (_evt.timerName == Global.Tick_MoveActiveTriggerBefore)
-    gstsServerMoveChangeTick(Global.deltaMoveTriggerBefore)
+  if (_evt.timerName == Tick_MoveActive) gstsServerMoveChangeTick(deltaMove)
+  else if (_evt.timerName == Tick_OutCheck) gstsServerOutCheck(self)
+  else if (_evt.timerName == Tick_MoveActiveTriggerBefore)
+    gstsServerMoveChangeTick(deltaMoveTriggerBefore)
 })

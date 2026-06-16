@@ -1,7 +1,7 @@
 import { g } from 'genshin-ts/runtime/core'
 
 import { Signal } from '../../resources/signals'
-import { gstsServerHideUIByChargeBegin } from '../../UIControl/ControlUIFunc'
+import { gstsServerHideUIByChargeBegin } from '../../systems/ui/directionUi'
 
 g.server({
   id: 1073741839,

@@ -1,6 +1,6 @@
 import { g } from 'genshin-ts/runtime/core'
 
-import { gstsServerReconcileLandingMarker } from '../chargeFunction'
+import { gstsServerReconcileLandingMarker } from '../../systems/charge/landingPreview'
 
 g.server({
   id: 1073741836,

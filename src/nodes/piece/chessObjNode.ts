@@ -1,7 +1,7 @@
 import { g } from 'genshin-ts/runtime/core'
 
-import * as Global from '../Global'
-import { gstsServerCalculateReflectVector } from '../Tool'
+import { getServerStageEntity } from '../../contracts/stage'
+import { gstsServerCalculateReflectVector } from '../../core/vector'
 
 g.server({
   id: 1073741834,
@@ -31,10 +31,7 @@ g.server({
         FA
       )
 
-      Global.getServerStageEntity()
-        .get('curPlayer')
-        .asType('entity')
-        .set('startPos', _evt.onHitLocation)
+      getServerStageEntity().get('curPlayer').asType('entity').set('startPos', _evt.onHitLocation)
       _evt.onHitEntity.set('moveVec', newVec)
 
       gsts.f.addUniformBasicLinearMotionDevice(_evt.onHitEntity, 'forwardMove', 99, newVec)

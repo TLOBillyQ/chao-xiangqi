@@ -13,9 +13,14 @@ npm run dev
 
 ## 项目结构
 
-- `src/`：源代码目录（入口文件与模块）
+- `src/nodes/`：节点图入口（唯一注册 `g.server` 的目录）
+- `src/systems/`：玩法系统逻辑（UI、回合、棋子、蓄力、运动、结算、扫描）
+- `src/core/`：通用向量与物理 helper
+- `src/contracts/`：编辑器 ID、定时器、关卡、物理常量等契约
+- `src/resources/`：构建工具自动提取的信号/预制体定义，不手工编辑
 - `gsts.config.ts`：编译与输出配置
-- `dist/`：编译产物（`.gs.ts` / `.json` / `.gia`）
+- `dist/`：编译产物（`.gs.ts` / `.json` / `.gia`），不手工编辑
+- `docs/ARCHITECTURE_ZH.md`：代码分层与依赖方向说明
 - `docs/EDITOR_BOUNDARIES_ZH.md`：代码与编辑器职责边界说明
 - `CLAUDE.md` / `AGENTS.md`：AI 协作指引
 

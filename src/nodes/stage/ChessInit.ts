@@ -1,11 +1,11 @@
 import { g } from 'genshin-ts/runtime/core'
 
-import { gstsServerCheckPieceMovementState } from './ChangeControl'
 import {
   gstsServerRefreshBothJoined,
   gstsServerSettleIfOpponentAbsent,
   gstsServerSettleIfPlayerLeft
-} from './settlement/settleFunction'
+} from '../../systems/settlement/settlement'
+import { gstsServerCheckPieceMovementState } from '../../systems/turn/turnState'
 
 g.server({
   id: 1073741842,

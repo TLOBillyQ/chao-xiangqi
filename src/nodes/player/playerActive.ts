@@ -2,22 +2,19 @@ import { PlayerEntity } from 'genshin-ts/definitions/nodes'
 import { g } from 'genshin-ts/runtime/core'
 import type { entity } from 'genshin-ts/runtime/value'
 
-import { gstsServerCanControl } from '../../ChangeControl'
-import {
-  dirPrefabs,
-  EntityTag,
-  factionBlack,
-  factionRed,
-  gstsServerBlackPieceDirections,
-  gstsServerRedPieceDirections,
-  Wall
-} from '../../Global'
+import { dirPrefabs, EntityTag, factionBlack, factionRed } from '../../contracts/editorIds'
+import { Wall } from '../../contracts/stage'
+import { gstsServerVec3ToVec2 } from '../../core/vector'
 import { Signal } from '../../resources/signals'
-import { gstsServerVec3ToVec2 } from '../../Tool'
+import {
+  gstsServerBlackPieceDirections,
+  gstsServerRedPieceDirections
+} from '../../systems/piece/directions'
+import { gstsServerCanControl } from '../../systems/turn/turnState'
 import {
   gstsServerActivateDirectionUI,
   gstsServerActivateSwitchUI
-} from '../../UIControl/ControlUIFunc'
+} from '../../systems/ui/directionUi'
 
 g.server({
   id: 1073741852,

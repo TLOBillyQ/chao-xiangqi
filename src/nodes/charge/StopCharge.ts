@@ -1,10 +1,10 @@
 import { g } from 'genshin-ts/runtime/core'
 
-import { gstsServerConfirmAndMovePiece } from '../../chessEntity/chessObjFunction'
-import { dirPrefabs } from '../../Global'
-import { gstsServerDestroyLandingMarker } from '../chargeFunction'
+import { dirPrefabs } from '../../contracts/editorIds'
 import { Signal } from '../../resources/signals'
-import { gstsServerHideUIByChargeStop } from '../../UIControl/ControlUIFunc'
+import { gstsServerDestroyLandingMarker } from '../../systems/charge/landingPreview'
+import { gstsServerConfirmAndMovePiece } from '../../systems/piece/launch'
+import { gstsServerHideUIByChargeStop } from '../../systems/ui/directionUi'
 
 g.server({
   id: 1073741838,
