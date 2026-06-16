@@ -39,9 +39,12 @@ g.server({
     _evt.eventSourceEntity.setUiControlStatus(UIControl.ui_enemyInfo, UIControlGroupStatus.Hidden)
     _evt.eventSourceEntity.setUiControlStatus(UIControl.btn_viewRules, UIControlGroupStatus.Hidden)
     _evt.eventSourceEntity.set('titleHiddenByRule', true)
-  } else if (_evt.uiControlGroupIndex == UIControl.btn_Ready) {
-    //点「准备」进入对局：默认切到垂直视角（实体「镜头1」GUID 1077937005 上的物件镜头条目「垂直」）
-    //本事件只有触发交互的玩家节点图能收到，故 self 即点击「准备」的玩家
+  } else if (
+    _evt.uiControlGroupIndex == UIControl.btn_Ready ||
+    _evt.uiControlGroupIndex == UIControl.btn_reGame
+  ) {
+    //点「准备」或「再来一局/重开」进入对局：默认切到垂直视角（实体「镜头1」GUID 1077937005 的物件镜头条目「垂直」）
+    //本事件只有触发交互的玩家节点图能收到，故 self 即点击的玩家
     self.set('isVerticalCam', true)
     _f.setPlayerCameraToFollowEntity(self, _f.queryEntityByGuid(1077937005n), '垂直')
   } else if (_evt.uiControlGroupIndex == UIControl.btn_switchCamera) {

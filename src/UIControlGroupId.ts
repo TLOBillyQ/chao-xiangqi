@@ -130,10 +130,10 @@ export const ui_enemyInfo = 1073742517n
 export const btn_closeRulePage = 1073742936n
 //切换视角按钮：进行中在 垂直 / 斜45 视角间来回切换
 export const btn_switchCamera = 1073744024n
+//重开/再来一局按钮（胜利/失败面板内，标签「再来一局」）：点击重新进入对局，与「准备」一样切垂直视角
+export const btn_reGame = 1073742690n
 
 // TODO: 以下 UI 常量暂未被代码引用，待 UI 功能实现后使用或清理
-//重开按钮
-export const btn_reGame = 1073742690n
 //退出游戏
 export const btn_exitGame = 1073742675n
 //点赞按钮
