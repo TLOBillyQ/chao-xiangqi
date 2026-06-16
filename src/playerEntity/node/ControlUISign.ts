@@ -1,7 +1,7 @@
 import { UIControlGroupStatus } from 'genshin-ts/definitions/enum'
 import { g } from 'genshin-ts/runtime/core'
 
-import { EntityTag } from '../../Global'
+import { EntityTag, factionRed } from '../../Global'
 import { Signal } from '../../resources/signals'
 import { gstsServerConfirmSettle } from '../../settlement/settleFunction'
 import * as UIControl from '../../UIControlGroupId'
@@ -43,18 +43,24 @@ g.server({
     _evt.uiControlGroupIndex == UIControl.btn_Ready ||
     _evt.uiControlGroupIndex == UIControl.btn_reGame
   ) {
-    //点「准备」或「再来一局/重开」进入对局：默认切到垂直视角（实体「镜头1」GUID 1077937005 的物件镜头条目「垂直」）
-    //本事件只有触发交互的玩家节点图能收到，故 self 即点击的玩家
+    //点「准备」或「再来一局/重开」进入对局：默认切到垂直视角
+    //本事件只有触发交互的玩家节点图能收到，故 self 即点击的玩家；
+    //对局镜头按玩家区分：玩家1(红)=镜头1(1077937005)，玩家2(黑)=镜头2(1077937034)，条目同名「垂直」「斜45」
     self.set('isVerticalCam', true)
-    _f.setPlayerCameraToFollowEntity(self, _f.queryEntityByGuid(1077937005n), '垂直')
+    let camGuid = 1077937034n
+    if (_f.queryEntityFaction(self) == factionRed) camGuid = 1077937005n
+    _f.setPlayerCameraToFollowEntity(self, _f.queryEntityByGuid(camGuid), '垂直')
   } else if (_evt.uiControlGroupIndex == UIControl.btn_switchCamera) {
-    //「切换视角」：进行中在 垂直 / 斜45 间来回切（两者都是实体「镜头1」GUID 1077937005 上的物件镜头条目）
+    //「切换视角」：进行中在 垂直 / 斜45 间来回切（同一玩家镜头实体上的两个同名条目）
+    //对局镜头按玩家区分：玩家1(红)=镜头1(1077937005)，玩家2(黑)=镜头2(1077937034)
     let toVertical = !self.get('isVerticalCam').asType('bool')
     self.set('isVerticalCam', toVertical)
+    let camGuid = 1077937034n
+    if (_f.queryEntityFaction(self) == factionRed) camGuid = 1077937005n
     if (toVertical) {
-      _f.setPlayerCameraToFollowEntity(self, _f.queryEntityByGuid(1077937005n), '垂直')
+      _f.setPlayerCameraToFollowEntity(self, _f.queryEntityByGuid(camGuid), '垂直')
     } else {
-      _f.setPlayerCameraToFollowEntity(self, _f.queryEntityByGuid(1077937005n), '斜45')
+      _f.setPlayerCameraToFollowEntity(self, _f.queryEntityByGuid(camGuid), '斜45')
     }
   } else if (
     _evt.uiControlGroupCompositeIndex == UIControl.changeDir.left ||
