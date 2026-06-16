@@ -17,7 +17,8 @@ export const PlayerVar = {
   startPos: 'startPos',
   step: 'step',
   isVerticalCam: 'isVerticalCam',
-  titleHiddenByRule: 'titleHiddenByRule'
+  titleHiddenByRule: 'titleHiddenByRule',
+  opponentNickname: '对方玩家昵称'
 } as const
 
 export const PieceVar = {

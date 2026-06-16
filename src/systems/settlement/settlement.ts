@@ -2,6 +2,7 @@ import { SettlementStatus, UIControlGroupStatus } from 'genshin-ts/definitions/e
 
 import { btn_settle, factionRed, ui_losePanel, ui_winPanel } from '../../contracts/editorIds'
 import { getServerStageEntity } from '../../contracts/stage'
+import { gstsServerSyncOpponentNicknames } from '../ui/opponentInfoUi'
 
 /**
  * 满足结算条件 → 显示结算 UI（不立即结算）。
@@ -113,6 +114,8 @@ export function gstsServerRefreshBothJoined() {
   if (players.length > 1) {
     if (!stage.get('bothJoined').asType('bool')) {
       stage.set('bothJoined', true)
+      //双方满员的单触发点：互写对方昵称到各自玩家变量「对方玩家昵称」，供 UI 绑定显示
+      gstsServerSyncOpponentNicknames()
     }
   }
 }
