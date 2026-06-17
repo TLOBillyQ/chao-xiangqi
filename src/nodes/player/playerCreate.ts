@@ -1,6 +1,7 @@
 import { g } from 'genshin-ts/runtime/core'
 
 import { Signal } from '../../resources/signals'
+import { gstsServerLabelPlayerPosition } from '../../systems/ui/positionNameplate'
 
 g.server({
   id: 1073741828,
@@ -26,6 +27,8 @@ g.server({
   //初始化镜头：准备阶段用准备相机（实体「镜头」GUID 1077936985 上的物件镜头条目「准备镜头」）
   f.setPlayerCameraToFollowEntity(self, f.queryEntityByGuid(1077936985n), '准备镜头')
   f.activateDisableModelDisplay(self.character, false)
+  //进场即把本玩家昵称写进其阵营对应的「玩家位置」底座物件，供其铭牌文本框 {1:s.玩家昵称} 显示（单次，不走 tick）
+  gstsServerLabelPlayerPosition(self)
 })
 
 g.server({
