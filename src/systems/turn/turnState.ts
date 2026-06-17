@@ -2,7 +2,7 @@ import { UIControlGroupStatus } from 'genshin-ts/definitions/enum'
 import { entity } from 'genshin-ts/runtime/value'
 
 import { factionBlack, factionRed } from '../../contracts/editorIds'
-import { getServerStageEntity } from '../../contracts/stage'
+import { getServerStageEntity, REQUIRED_PLAYERS } from '../../contracts/stage'
 import {
   GlobalTimer_BlackCountdown,
   GlobalTimer_RedCountdown,
@@ -21,7 +21,8 @@ export function gstsServerInitializeFirstTurnIfNeeded() {
 
   if (!turnInitialized) {
     let players = gsts.f.getListOfPlayerEntitiesOnTheField()
-    if (players.length > 0) {
+    //低于 REQUIRED_PLAYERS（满员）前不开局：不设 curPlayer/isControl、不启动倒计时，玩家停在准备界面干等。
+    if (players.length >= REQUIRED_PLAYERS) {
       let redPlayer = players[0] as entity
       let blackPlayer = players[0] as entity
       let hasRedPlayer = false
