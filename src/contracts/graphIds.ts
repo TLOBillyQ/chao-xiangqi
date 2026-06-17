@@ -12,7 +12,11 @@ export const GraphId = {
   controlUiSignal: 1073741841,
   playerTimers: 1073741843,
   playerUiControls: 1073741844,
-  playerActive: 1073741852
+  playerActive: 1073741852,
+  //历史图同 ID 接管（旧 _GSTS_* 图仍挂载生效，由 TS 在同 ID 覆盖；见 recovered/orphan-nodegraphs/README.md）
+  stagePanel: 1073741847,
+  readyToPlay: 1073741849,
+  chessDestroy: 1073741850
 } as const
 
 export const GraphName = {

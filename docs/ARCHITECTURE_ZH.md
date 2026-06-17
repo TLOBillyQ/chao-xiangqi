@@ -16,42 +16,46 @@ L1 core/                  通用 helper：向量、碰撞物理
 L0 contracts/ resources/  编辑器契约、资源生成文件、常量与关卡实体访问
 ```
 
-旧入口文件（`Global.ts`、`Tool.ts`、`UIControlGroupId.ts`、`ChangeControl.ts` 及 `chessEntity/`、`chargePower/`、`trigger/`、`settlement/` 下的兼容壳）已在 ADR 0001 收尾时全部删除；代码统一直接从 `contracts/`、`core/`、`systems/` import，`src/` 只保留 `contracts / resources / core / systems / nodes` 五个目录。
+旧入口文件（`Global.ts`、`Tool.ts`、`UIControlGroupId.ts`、`ChangeControl.ts` 及 `chessEntity/`、`chargePower/`、`trigger/`、`settlement/` 下的兼容壳）已在 ADR 0001 收尾时全部删除；运行代码统一直接从 `contracts/`、`core/`、`systems/` import，`src/` 的运行分层只保留 `contracts / resources / core / systems / nodes` 五个目录。`src/recovered/` 仅保存从孤儿节点图恢复出的类型检查审计档案，不注册 `g.server`，也不得被运行模块 import。
 
 ## 目录职责
 
-| 目录 / 文件 | 层 | 职责 |
-| --- | --- | --- |
-| `src/contracts/editorIds.ts` | L0 | 阵营、标签、预制体、UI 控件组等编辑器 ID 契约 |
-| `src/contracts/stage.ts` | L0 | 棋盘边界、初始棋子坐标、关卡实体 `getServerStageEntity()` |
-| `src/contracts/timers.ts` | L0 | 普通定时器名、全局倒计时名、倒计时 UI 控件 ID |
-| `src/contracts/physics.ts` | L0 | 半径、恢复系数、阻尼、落点校准等物理常量 |
-| `src/contracts/variables.ts` | L0 | 跨图共享实体变量名约定 |
-| `src/contracts/graphIds.ts` | L0 | 节点图 `id` / `name` 契约备查 |
-| `src/resources/signals.ts` | L0 | 自动生成的信号定义；不要手改 |
-| `src/resources/prefabs.ts` | L0 | 自动生成的预制体清单；不要手改 |
-| `src/core/vector.ts` | L1 | 逻辑向量/世界向量转换、反射向量 |
-| `src/core/physics.ts` | L1 | 碰撞冲量、真实碰撞点计算 |
-| `src/systems/ui/*` | L2 | 方向/蓄力 UI、播报 UI、规则页显隐、相机切换 |
-| `src/systems/turn/turnState.ts` | L2 | `moveList`、可操控判定、回合切换 |
-| `src/systems/piece/directions.ts` | L2 | 红黑双方棋子方向字典 |
-| `src/systems/piece/launch.ts` | L2 | 选定方向后发射棋子 |
-| `src/systems/charge/landingPreview.ts` | L2 | 蓄力落点预览、落点指示生成/销毁/对账 |
-| `src/systems/motion/movement.ts` | L2 | 速度阻尼衰减与运动停止清理 |
-| `src/systems/motion/outOfBounds.ts` | L2 | 棋子出界、下落表现、将帅出界触发结算 |
-| `src/systems/settlement/settlement.ts` | L2 | 结算 UI、确认结算、玩家离场/缺席结算 |
-| `src/systems/scan/scanPiece.ts` | L2 | 扫描玩家脚下可选棋子、维护选中特效 |
-| `src/nodes/**` | L3 | 仅注册 `g.server`，把事件/信号/计时器分发到 systems |
+| 目录 / 文件                            | 层       | 职责                                                                 |
+| -------------------------------------- | -------- | -------------------------------------------------------------------- |
+| `src/contracts/editorIds.ts`           | L0       | 阵营、标签、预制体、UI 控件组等编辑器 ID 契约                        |
+| `src/contracts/stage.ts`               | L0       | 棋盘边界、初始棋子坐标、关卡实体 `getServerStageEntity()`            |
+| `src/contracts/timers.ts`              | L0       | 普通定时器名、全局倒计时名、倒计时 UI 控件 ID                        |
+| `src/contracts/physics.ts`             | L0       | 半径、恢复系数、阻尼、落点校准等物理常量                             |
+| `src/contracts/variables.ts`           | L0       | 跨图共享实体变量名约定                                               |
+| `src/contracts/graphIds.ts`            | L0       | 节点图 `id` / `name` 契约备查                                        |
+| `src/resources/signals.ts`             | L0       | 自动生成的信号定义；不要手改                                         |
+| `src/resources/prefabs.ts`             | L0       | 自动生成的预制体清单；不要手改                                       |
+| `src/recovered/orphanNodegraphs/*`     | 审计档案 | 从 `.gil` 孤儿节点图恢复的旧行为说明；只用于迁移审计，不参与运行链路 |
+| `src/core/vector.ts`                   | L1       | 逻辑向量/世界向量转换、反射向量                                      |
+| `src/core/physics.ts`                  | L1       | 碰撞冲量、真实碰撞点计算                                             |
+| `src/systems/ui/*`                     | L2       | 方向/蓄力 UI、播报 UI、规则页显隐、相机切换                          |
+| `src/systems/turn/turnState.ts`        | L2       | `moveList`、可操控判定、回合切换                                     |
+| `src/systems/piece/directions.ts`      | L2       | 红黑双方棋子方向字典                                                 |
+| `src/systems/piece/launch.ts`          | L2       | 选定方向后发射棋子                                                   |
+| `src/systems/charge/landingPreview.ts` | L2       | 蓄力落点预览、落点指示生成/销毁/对账                                 |
+| `src/systems/motion/movement.ts`       | L2       | 速度阻尼衰减与运动停止清理                                           |
+| `src/systems/motion/outOfBounds.ts`    | L2       | 棋子出界、下落表现、将帅出界触发结算                                 |
+| `src/systems/settlement/settlement.ts` | L2       | 结算 UI、确认结算、玩家离场/缺席结算                                 |
+| `src/systems/scan/scanPiece.ts`        | L2       | 扫描玩家脚下可选棋子、维护选中特效                                   |
+| `src/nodes/**`                         | L3       | 仅注册 `g.server`，把事件/信号/计时器分发到 systems                  |
 
 ## 节点入口
 
 `g.server(...)` 入口统一位于 `src/nodes/`：
 
 - `nodes/stage/ChessInit.ts`：关卡初始化、静止扫描、玩家缺席/离场结算。
+- `nodes/stage/ReadyToPlayGraph.ts`：历史 `readyToPlay(1073741849)` 同 ID 接管，处理全员准备后的开局摆子与布局切换。
 - `nodes/motion/triggerNode.ts`：碰撞事件、运动计时器分发。
 - `nodes/piece/chessObjNode.ts`：棋子初始化、墙壁反弹。
+- `nodes/piece/ChessDestroyGraph.ts`：历史 `chessDestroy(1073741850)` 同 ID 接管，处理棋子销毁后的 `moveList` 清理、剩余棋子与将帅判胜兜底。
 - `nodes/charge/{BeginCharge,StopCharge,ChargeChangeTick,ResetCharge}.ts`：蓄力生命周期。
 - `nodes/player/{playerCreate,playerActive,playerTimers,ControlUISign}.ts`：玩家创建、选子、倒计时、UI 输入。
+- `nodes/ui/StagePanelGraph.ts`：历史 `StagePanel(1073741847)` 同 ID 接管，处理准备/规则页/点赞/退出提示信号。
 - `nodes/scan/newGetChess.ts`：扫描图入口。
 
 入口文件不得被其他模块 import；除 `genshin-ts` 外，只应依赖 `contracts/`、`resources/`、`core/`、`systems/`。
@@ -80,8 +84,9 @@ L0 contracts/ resources/  编辑器契约、资源生成文件、常量与关卡
 
 1. `nodes/motion/triggerNode.ts` 的 `OutCheck` 计时器调用 `systems/motion/outOfBounds.ts`。
 2. 普通棋子出界播放下落并销毁。
-3. 将/帅出界后调用 `systems/settlement/settlement.ts` 显示胜负 UI。
-4. 玩家点击「结算」按钮时，由 `nodes/player/ControlUISign.ts` 调用 `gstsServerConfirmSettle()` 真正 `settleStage()`。
+3. 销毁事件再进入 `nodes/piece/ChessDestroyGraph.ts`，清理 `moveList`、扣减拥有者 `剩余棋子`、显示出界播报。
+4. 将/帅出界或销毁后调用 `systems/settlement/settlement.ts` 显示胜负 UI。
+5. 玩家点击「结算」按钮时，由 `nodes/player/ControlUISign.ts` 调用 `gstsServerConfirmSettle()` 真正 `settleStage()`。
 
 ## 模块间通信方式
 
@@ -94,6 +99,7 @@ L0 contracts/ resources/  编辑器契约、资源生成文件、常量与关卡
 
 - 不手改 `dist/` 产物；需要验证时删除整个 `dist/` 后重新构建。
 - 不手改 `src/resources/signals.ts`、`src/resources/prefabs.ts`。
+- `src/recovered/` 里的文件只作为审计档案；恢复行为时应迁移到现有 `nodes/` 或 `systems/`，不要从运行模块 import recovered 文件。
 - 不随意修改已注入节点图的 `g.server({ id, name })`；`name` 是编辑器契约。
 - 新增玩法逻辑优先放入 `systems/**`；只有事件注册和参数分发留在 `nodes/**`。
 - 新增通用数学/物理 helper 放入 `core/**`，不能依赖 systems 或 nodes。
