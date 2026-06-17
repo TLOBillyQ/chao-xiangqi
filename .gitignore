@@ -8,3 +8,10 @@ out
 *.gil
 *.tsbuildinfo
 .idea
+
+# 孤儿节点图审计：只版本化人读产物（README/*.readable.txt/*.md）；
+# 可由 scripts/extract-orphan-nodegraphs.mjs 重生的 protobuf 解码 dump 不入库
+recovered/**/*.json
+
+# 恢复档案：仅本地供 typecheck 参考，不入 git
+src/recovered/
