@@ -186,22 +186,3 @@ export const id_broadList = list(
 )
 
 export const btn_test = 1073743813n
-
-//==== 开局（readyToPlay / 历史图 1849）所需的编辑器侧资源 ====
-//游玩布局：开局后把玩家从准备界面切到此布局（运行时控件均为其子级，见上方 chargeBegin 说明）
-export const playLayout = 1073742453n
-//开局准备点：开局时把双方玩家传送到此预设点（预设点索引空间，与上方 EntityTag.Dir 的数值相同纯属巧合，互不相关）
-export const openingPresetPoint = 1073741826n
-//开局环境配置序号
-export const openingEnvironment = 1186988035n
-//双方主视角物件镜头：实体 GUID + 物件镜头「条目名」（必须用条目名而非模板名，与 settlement 的「准备镜头」同理）
-export const player1CameraEntityGuid = 1077937005n
-export const player2CameraEntityGuid = 1077937007n
-export const player1CameraEntry = '玩家1镜头'
-export const player2CameraEntry = '玩家2镜头'
-
-//==== 历史图 StagePanel / chessDestroy 接管所需 UI ====
-//旧规则悬浮交互页关闭按钮；当前规则页关闭按钮为 1073742936，这里兼容历史图里的 1073742937
-export const btn_closeRulePageLegacy = 1073742937n
-//棋子出界播报面板
-export const ui_outOfBoundsPanel = 1073742864n
