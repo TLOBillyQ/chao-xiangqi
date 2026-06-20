@@ -15,18 +15,20 @@
 
 ## 迁移状态（截至 2026-06-17）
 
-用户已确认 `chargePower`、`readyChange`、`ExitGame` 已从编辑器删除；剩余仍实际挂载生效的历史图为 `StagePanel(1847)`、`readyToPlay(1849)`、`chessDestroy(1850)`。这三张图已按原 ID 用 TS 接管并注入覆盖；`src/recovered/*` 继续只作为审计档案。
+用户已确认 `chargePower`、`readyChange`、`ExitGame` 已从编辑器删除；剩余仍实际挂载生效的历史图为 `StagePanel(1847)`、`readyToPlay(1849)`、`chessDestroy(1850)`。
+
+> **状态更正（2026-06-18）**：`0bde1c2` 曾尝试同 ID TS 接管这三张图，结果**局内崩溃且 `npm run build` 失败**，`fdb0701` 已**干净回退**。下表原先标注的"✅ 已实现、构建并注入"**不属实**。当前 HEAD 是三张编辑器图与 `src/` 分工共存的已知良好基线。重做策略与逐图执行清单见 `docs/adr/0002-historical-graph-same-id-takeover.md` 与同目录 `TAKEOVER_CHECKLIST.md`。
 
 | ID | 图 | 处置 | 进度 |
 | ---: | --- | --- | --- |
-| 1073741849 | `readyToPlay` | 同 ID TS 接管（开局） | ✅ 已实现、构建并注入（`nodes/stage/ReadyToPlayGraph.ts` + `systems/stage/startGame.ts`，`.gia id=1073741849`） |
-| 1073741847 | `StagePanel` | 同 ID TS 接管（准备/UI/信号） | ✅ 已实现、构建并注入（`nodes/ui/StagePanelGraph.ts` + `systems/ui/stagePanelUi.ts`，`.gia id=1073741847`） |
-| 1073741850 | `chessDestroy` | 同 ID TS 接管（销毁兜底） | ✅ 已实现、构建并注入（`nodes/piece/ChessDestroyGraph.ts` + `systems/piece/chessDestroy.ts`，`.gia id=1073741850`） |
+| 1073741849 | `readyToPlay` | 同 ID TS 接管（开局，触发=方案B 双方准备） | ⏳ 待重做（接管放最后，见 CHECKLIST ③） |
+| 1073741847 | `StagePanel` | 同 ID TS 接管（准备/UI/信号） | ⏳ 待重做（先接管，见 CHECKLIST ①） |
+| 1073741850 | `chessDestroy` | 同 ID TS 接管（销毁后果） | ⏳ 待重做（见 CHECKLIST ②，含铲 `outOfBounds:114-120`） |
 | 1073741826 | `chargePower` | 不接管，审计存档 | 已被 `nodes/charge/*` 覆盖，且用户确认编辑器侧已删除 |
 | 1073741846 | `readyChange` | 不接管（把 `btn_reGame` 当准备切换，语义污染） | 审计存档，用户确认编辑器侧已删除 |
 | 1073741848 | `ExitGame` | 不接管（裸 `settleStage`） | 审计存档，用户确认编辑器侧已删除；退出按钮走现有结算入口 |
 
-**当前策略**：注入器只替换 dist 中存在的图。现在三张仍生效历史图均已有同 ID TS entry；后续不要再恢复 `src/recovered/orphanNodegraphs/*`，只在当前 `nodes/` 与 `systems/` 上维护。
+**当前策略**：注入器按 ID 原地替换 `.gil` 里已存在的图 slot。三张图均走同 ID 接管（复用原 slot，挂载天然安全，无需手动删图）；`recovered/*` 继续只作审计档案、不被运行逻辑 import。
 
 > 注：下方「深入审计结论」是最初按「孤儿/可能未挂载」假设写的历史结论，凡涉及「确认无用后清理」「未挂载」的判断，均以上方修正结论与游戏内确认为准。
 

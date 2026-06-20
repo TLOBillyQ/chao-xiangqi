@@ -161,12 +161,11 @@ export const ui_broadcastFxFull = 1073742871n
 export const ui_broadcastEnemy = 1073742872n
 export const ui_broadcastMine = 1073742910n
 
-// TODO: 以下 UI 常量暂未被代码引用，待 UI 功能实现后使用或清理
-//退出游戏
+//退出游戏（StagePanel 接管：Settle_Stage + 发 ExitGame 信号）
 export const btn_exitGame = 1073742675n
-//点赞按钮
+//点赞按钮（StagePanel 接管：点按发 showLike 信号）
 export const btn_showLike = 1073742674n
-//局内查看规则
+//局内查看规则（与 btn_viewRules 同走规则页）
 export const btn_viewRulesInGame = 1073742875n
 
 export const str_playerWait = list('str', [
@@ -185,4 +184,14 @@ export const id_broadList = list(
   [1073742853, 1073742854, 1073742852, 1073742855, 1073742856]
 )
 
-export const btn_test = 1073743813n
+//模拟退出（顶替已从游戏侧删除的 btn_test/1073743813）：手动触发"对手离场"结算引导
+export const btn_simulateExit = 1073744808n
+//规则悬浮交互页 + 其列表容器（StagePanel 接管负责打开）
+export const ui_rulePage = 1073742934n
+export const ui_rulePageList = 1073742937n
+//点赞随机动效控件池（收到对方 showLike 时随机播一个；待局内核对是否仍在当前布局）
+export const likeAnimControls = list('int', [
+  1073742691, 1073742695, 1073742699, 1073742703, 1073742707, 1073742711
+])
+//对手退出游戏时的「对方玩家状态」文案
+export const str_opponentExited = '对方已退出游戏'

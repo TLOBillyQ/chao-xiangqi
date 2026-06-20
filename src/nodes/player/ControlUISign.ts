@@ -4,7 +4,6 @@ import { g } from 'genshin-ts/runtime/core'
 import { EntityTag } from '../../contracts/editorIds'
 import * as UIControl from '../../contracts/editorIds'
 import { Signal } from '../../resources/signals'
-import { gstsServerConfirmSettle } from '../../systems/settlement/settlement'
 import {
   gstsServerSwitchToVerticalCamera,
   gstsServerToggleBattleCamera
@@ -33,9 +32,8 @@ g.server({
   id: 1073741844,
   name: 'changeDir'
 }).on('whenUiControlGroupIsTriggered', (_evt, _f) => {
-  if (_evt.uiControlGroupIndex == UIControl.btn_settle) {
-    gstsServerConfirmSettle()
-  } else if (_evt.uiControlGroupIndex == UIControl.btn_viewRules) {
+  //btn_settle 的结算职责已移交 StagePanel(1847)：Settle_Stage + ExitGame（对齐原版）。本图只管相机/方向/标题。
+  if (_evt.uiControlGroupIndex == UIControl.btn_viewRules) {
     gstsServerHideTitleForRulePage(_evt.eventSourceEntity)
   } else if (
     _evt.uiControlGroupIndex == UIControl.btn_Ready ||
