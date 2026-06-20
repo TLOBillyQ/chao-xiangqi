@@ -1,6 +1,7 @@
 import { entity } from 'genshin-ts/runtime/value'
 
 import { factionBlack, factionRed } from '../../contracts/editorIds'
+import { getServerStageEntity } from '../../contracts/stage'
 
 /**
  * 双方都在场时按阵营互写对方昵称（红方变量存黑方昵称、黑方变量存红方昵称）。
@@ -27,5 +28,22 @@ export function gstsServerSyncOpponentNicknames() {
   if (hasRed && hasBlack) {
     redPlayer.set('对方玩家昵称', gsts.f.getPlayerNickname(blackPlayer))
     blackPlayer.set('对方玩家昵称', gsts.f.getPlayerNickname(redPlayer))
+  }
+}
+
+/**
+ * 满员单触发：本局首次双方在场时翻转 stage 的 bothJoined 并互写对方昵称。由 ChessInit 计时器每 tick 调用。
+ *
+ * 原由 settlement.ts 的 gstsServerRefreshBothJoined 承担（满员翻转 + 昵称同步）；settlement 整套废弃后，
+ * 昵称同步与结算无关，迁来此处单独维护，避免随结算一起删掉导致「对方玩家昵称」铭牌永久空白。
+ */
+export function gstsServerSyncOpponentNicknamesOnBothJoined() {
+  let players = gsts.f.getListOfPlayerEntitiesOnTheField()
+  let stage = getServerStageEntity()
+  if (players.length > 1) {
+    if (!stage.get('bothJoined').asType('bool')) {
+      stage.set('bothJoined', true)
+      gstsServerSyncOpponentNicknames()
+    }
   }
 }

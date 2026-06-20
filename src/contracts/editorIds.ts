@@ -195,3 +195,13 @@ export const likeAnimControls = list('int', [
 ])
 //对手退出游戏时的「对方玩家状态」文案
 export const str_opponentExited = '对方已退出游戏'
+
+//—— chessDestroy(1850) 接管 ——
+//出界播报根/触发控件：出界时双方亮起，3s 后关
+export const ui_outOfBoundsBroadcast = 1073742864n
+//胜负后切换的准备/游玩布局（与 EntityTag.Piece 数值巧合，独立常量，勿复用 EntityTag.Piece）
+export const layout_ready = 1073741825n
+//输家氛围环境配置（modifyEnvironmentSettings 的 environmentConfigIndex）
+export const env_loseAmbience = 1186988036n
+//准备镜头锚实体 GUID（物件镜头条目名「准备镜头」；原散落于 playerCreate/settlement 的裸 GUID，集中此处）
+export const cameraAnchorGuid = 1077936985n

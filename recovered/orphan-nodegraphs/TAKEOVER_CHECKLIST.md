@@ -27,6 +27,15 @@
 
 ## ② chessDestroy(1073741850) — 关卡实体 · `实体销毁时`（关卡专属）
 
+**✅ 已实现 · typecheck + `--noinject` 编译绿 · IR 已核（待局内注入验证）**
+- 新增 `nodes/stage/ChessDestroyGraph.ts`（入口 `whenEntityIsDestroyed`，关卡挂载）+ `systems/stage/chessDestroy.ts`。事件源=被销毁子：棋子类型/阵营 从 `customVariableComponentSnapshot` 快照读；死方阵营=`_evt.faction`、归属玩家=`_evt.ownerEntity`；关卡状态走 `getServerStageEntity()`。
+- 将帅死 rematch（**不 settleStage**）：输家 ui_losePanel+氛围+(-10)、赢家 ui_winPanel+(+20)，均切准备布局/镜头、亮再来一局/退出/点赞；随后 GameStage 3→1、canChange 关、红黑倒计时 -999、暂停-清-恢复 moveList、双方剩余棋子=16、清三播报队列。
+- 出界播报：剩余棋子-1、阵营/棋子/剩余三队列插表头、逐项点亮 id_broadList 槽、写昵称、3s 后关播报（setTimeout 编译器建池；时长 IR `[count=1,value=3]` 定为 **3000ms**）。
+- 积分用 `SettlementStatus.Undefined`(=原图 4100/未定 TBC)，**实体方法** `玩家.setPlayerRankScoreChange`（避开 0bde1c2 崩因①）；无 while/removeEntity（避开②）。
+- 铲重复：`outOfBounds.ts` 删 import Settle + 将帅死局部变量 + 114-120 结算块，**保留 112 `destroy()`**（1850 触发源）。
+- **待局内核对 ID（漂移高危）**：env `1186988036`、镜头锚 `1077936985`、布局 `1073741825`、出界播报控件 `1073742864`/`1073742852-856`。
+- **跨图开放问题（局内观察 / 归 ③）**：rematch 只重置不重摆——下一局靠再点准备触发编辑器 1849 重摆；本图**不复位 `turnInitialized`**（避免无"已准备"闸时提前起倒计时），下一局回合 init 衔接待 readyToPlay 接管(③，加"已准备"闸)时一并处理。
+
 - **复用 helper**：`turnState`（倒计时关 / `moveList` 清）；**不复用 settlement**（已废，见 ④），将帅后果按原版自实现。
 - **将帅死 = 原版 rematch（自实现、不 `settleStage`）**：弹胜负面板（切布局 `1073741825` + `准备镜头`）+ 积分 `实体.setPlayerRankScoreChange(...)`（按 readable Node125/150/173 的红黑分值）+ **重置再来一局**（`GameStage` 3→1、红黑倒计时置 `-999` 关、`moveList` 清、双方 `剩余棋子` 重置）。
 - **独有自实现**：出界播报队列（`播报-出界阵营/棋子/剩余`、`出界播报玩家昵称`、`__gsts_timeout_0_*` 轮播）、`剩余棋子` 计数。
