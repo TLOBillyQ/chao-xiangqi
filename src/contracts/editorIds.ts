@@ -205,3 +205,14 @@ export const layout_ready = 1073741825n
 export const env_loseAmbience = 1186988036n
 //准备镜头锚实体 GUID（物件镜头条目名「准备镜头」；原散落于 playerCreate/settlement 的裸 GUID，集中此处）
 export const cameraAnchorGuid = 1077936985n
+
+//—— readyToPlay(1849) 接管 ——
+//开局传送预设点（双方传到此点；与 EntityTag.Dir 数值巧合，独立常量，勿复用 EntityTag.Dir）
+export const presetPoint_ready = 1073741826n
+//游玩布局（开局切到它；蓄力/方向/计时等控件均其子级，对齐 chargeBegin 注释）
+export const layout_play = 1073742453n
+//开局环境氛围（modifyEnvironmentSettings 的 environmentConfigIndex；与输家 env_loseAmbience/...036 成对）
+export const env_playAmbience = 1186988035n
+//双方物件镜头锚实体 GUID（条目名「玩家1镜头」=红 / 「玩家2镜头」=黑；已对活地图 1073741868 字节核验存在）
+export const camP1Anchor = 1077937005n
+export const camP2Anchor = 1077937007n

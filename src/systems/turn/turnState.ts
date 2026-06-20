@@ -22,7 +22,14 @@ export function gstsServerInitializeFirstTurnIfNeeded() {
   if (!turnInitialized) {
     let players = gsts.f.getListOfPlayerEntitiesOnTheField()
     //低于 REQUIRED_PLAYERS（满员）前不开局：不设 curPlayer/isControl、不启动倒计时，玩家停在准备界面干等。
-    if (players.length >= REQUIRED_PLAYERS) {
+    //已准备闸：满员后还需全员「玩家状态==1（已准备）」才开局——否则会在准备界面抢先起倒计时，与 readyToPlay(1849) 双初始化。
+    let satisfied = players.length >= REQUIRED_PLAYERS
+    for (let i = 0; i < players.length; i++) {
+      if (players[i].get('玩家状态').asType('float') != 1) {
+        satisfied = false
+      }
+    }
+    if (satisfied) {
       let redPlayer = players[0] as entity
       let blackPlayer = players[0] as entity
       let hasRedPlayer = false

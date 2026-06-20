@@ -45,6 +45,14 @@
 
 ## ③ readyToPlay(1073741849) — 关卡实体 · `playerReady` 信号（全局）· **放最后**
 
+**✅ 已实现 · typecheck + `--noinject` 编译绿 · IR 已核（待局内注入验证）**
+- 新增 `nodes/stage/ReadyToPlayGraph.ts`（入口 `onSignal(playerReady)`，关卡挂载）+ `systems/stage/readyToPlay.ts`。双方「玩家状态==1」才摆盘：逐玩家传送预设点 `1073741826`/切游玩布局 `1073742453`/物件镜头(红=玩家1镜头 `1077937005`、黑=玩家2镜头 `1077937007`)/环境 `1186988035`/剩余棋子=16/隐播报+动效；清场→摆 16+16（`initPos` 唯一来源）→`GameStage=2`→起 `PlayerExit`(5s)。
+- **双初始化已根治**：board 归本图，首回合复用 `turnState.gstsServerInitializeFirstTurnIfNeeded`（红先手/倒计时/curPlayer/turnInitialized），并给该 helper 加同款「全员玩家状态==1」闸——满员但未全员准备时不抢起倒计时。
+- **清场无死循环**：原图 Node65-73 的 `Finite_Loop(999)+删末位+重判长度` → 带 999 计数上限的 while 删 `pieces[length-1]`（gsts 不支持 `i--` 递减循环）；避开 `0bde1c2` 的裸 while removeEntity。
+- **GUID 漂移核验（清单原误记已纠正）**：readable 的 `1077936136-149` 实为**棋子预制**(=`initPos.名称`)，非镜头；真镜头锚=`1077937005/1077937007`。相机锚/预设点/棋子预制/关卡实体 GUID 已对活地图 `1073741868.gil` 做字节扫描确认存在（诱饵未命中，扫描可信），`a8db8b0` 式漂移不成立。
+- **验证点**：满员后双方点准备→摆子+镜头+布局+倒计时一次到位、不重复起倒计时；再来一局清场不残留；单方点准备不开局；版本戳 `1849-v1`。
+
+### 原始计划（保留）
 - **开局触发 = 方案 B（双方点准备）**：保留"全员 `玩家状态==1` 才开局"。
 - **复用 helper**：`turnState.gstsServerInitializeFirstTurnIfNeeded`（回合 init / 红黑先手 / 倒计时）；摆子坐标用 `contracts/stage.ts` 的 `initPos`。
 - **独有自实现**：传送预设点、切游玩布局、设双方镜头、`剩余棋子=16`、环境、起 `红方倒计时`、**摆 16+16 棋子（唯一来源，不可丢）**、`GameStage=2`、起 `PlayerExit`。
