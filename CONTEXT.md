@@ -13,3 +13,13 @@
 ## 迁移真值来源
 
 - **真值 (Ground truth)**：历史图的真实行为以 `recovered/orphan-nodegraphs/<id>_<name>.readable.txt` 为准，**不**以 `recovered/**/*.ts` 草稿或 `src/` 现有镜像为准。
+
+## 对局生命周期与回合 (Match lifecycle & turn)
+
+- **对局相位 (matchPhase)**：单一全局相位，取代旧 `GameStage` 的 1/2/3 混用。仅两态：**准备 (LOBBY)** = 玩家加入/切换准备、棋盘未摆；**进行中 (PLAYING)** = 已摆盘、回合交替进行。
+- **回合相位 (turnPhase)**：只在 PLAYING 内有意义，取代 `canChange`。**活跃 (ACTIVE)** = 当前回合玩家可操作；**交接 (HANDOFF)** = 切换玩家的过渡窗口，期间不接受新的回合切换。
+- **开局 (Match-start)**：LOBBY→PLAYING 的转换。约束为**原子**——摆子与授予首回合操作权不可分别成闸（二者分离正是“棋盘摆好却点不动”单人 bug 的根因）。
+- **可开局 (Match-start condition)**：开局的唯一谓词。当**全员已准备**且**在场人数达到该游玩方式所需人数**时成立。取代过去“全员已准备”（仅摆子）与“满员+已准备”（仅授控制权）两套互相分歧的判定。
+- **全员已准备 (All-ready)**：在场每个玩家「玩家状态」==1（已准备）。
+- **游玩方式 (Play mode)**：引擎区分**试玩/普通 (Play)**、**房间 (RoomPlay)**、**对战匹配 (MatchPlay)**（`queryGameModeAndPlayerNumber`）。决定“可开局”所需人数：试玩允许 1 人，匹配/房间需 2 人。
+- **操作权 (isControl)**：不再独立置位，而是**派生投影**——仅当 `matchPhase==PLAYING && turnPhase==ACTIVE && 该玩家==当前回合玩家` 时为真；每次回合变化时推送到各玩家实体（扫描图按玩家变量读取）。
