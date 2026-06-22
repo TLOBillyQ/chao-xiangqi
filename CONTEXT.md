@@ -14,6 +14,10 @@
 
 - **真值 (Ground truth)**：历史图的真实行为以 `recovered/orphan-nodegraphs/<id>_<name>.readable.txt` 为准，**不**以 `recovered/**/*.ts` 草稿或 `src/` 现有镜像为准。
 
+## 维护脚本
+
+- **过期脚本 (Stale script)**：不再被 `package.json`、文档、CI 或日常 gsts 工作流引用，且用途属于一次性迁移、审计或恢复的脚本。活跃入口脚本和回归脚本不属于过期脚本。
+
 ## 对局生命周期与回合 (Match lifecycle & turn)
 
 - **对局相位 (matchPhase)**：单一全局相位，取代旧 `GameStage` 的 1/2/3 混用。仅两态：**准备 (LOBBY)** = 玩家加入/切换准备、棋盘未摆；**进行中 (PLAYING)** = 已摆盘、回合交替进行。
