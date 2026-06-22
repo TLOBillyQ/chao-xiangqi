@@ -45,6 +45,18 @@ assert(
   'PlayerExit 轮询 tick 应接入失去法定人数检查'
 )
 assert(
+  /whenEntityIsRemovedDestroyed['"][\s\S]*gstsServerCheckPlayerExitQuorum\(\)/.test(
+    files.chessInit
+  ),
+  '关卡级实体移除/销毁事件应唤醒同一个失去法定人数检查（#4 事件 handler）'
+)
+assert(
+  !/eventSourceGuid|getPlayerEntityByGuid|queryEntityByGuid[\s\S]*queryEntityType/.test(
+    files.chessInit
+  ),
+  '事件 handler 不应把被移除实体身份当作退出事实，最终仍按在场玩家数判定'
+)
+assert(
   /gstsServerHasLostLegalPlayerCount/.test(files.matchLifecycle) &&
     /MatchPhase\.PLAYING/.test(files.matchLifecycle) &&
     /queryGameModeAndPlayerNumber\(\)\.playerCount/.test(files.matchLifecycle) &&
@@ -100,8 +112,18 @@ function hasLostLegalPlayerCount(state) {
   return state.matchPhase === MatchPhase.PLAYING && state.players.length < state.playerCount
 }
 
-function pollPlayerExit(state) {
+// 轮询路径与实体移除/销毁事件路径共用同一个失去法定人数检查（gstsServerCheckPlayerExitQuorum）。
+// 事件只是唤醒信号，最终判定仍由 hasLostLegalPlayerCount 给出，故二者建模为同一行为。
+function checkPlayerExitQuorum(state) {
   if (hasLostLegalPlayerCount(state)) applyOpponentExitPrompt(state)
+}
+
+function pollPlayerExit(state) {
+  checkPlayerExitQuorum(state)
+}
+
+function wakeOnEntityRemoved(state) {
+  checkPlayerExitQuorum(state)
 }
 
 {
@@ -196,9 +218,68 @@ function pollPlayerExit(state) {
   )
 }
 
+// #4 实体移除/销毁事件路径：玩家真实退出后无需等满轮询间隔即可收敛到结算提示。
+{
+  const state = {
+    matchPhase: MatchPhase.PLAYING,
+    playerCount: 2,
+    handled: false,
+    players: [{ id: 1, score: 0, promptInit: 0, settleButton: false }]
+  }
+  // 对手实体被移除即唤醒检查，先于任何 PlayerExit 轮询 tick。
+  wakeOnEntityRemoved(state)
+  assert(
+    state.players[0].promptInit === 1,
+    '玩家退出的实体移除事件应立即触发一次结算提示（不等轮询）'
+  )
+  assert(state.players[0].score === 5, '事件路径应给予与轮询路径一致的离场奖励')
+  assert(state.players[0].settleButton === true, '事件路径应显示结算按钮')
+  // 重复事件 + 兜底轮询 tick：共用 guard，不重复加分/重复提示。
+  wakeOnEntityRemoved(state)
+  pollPlayerExit(state)
+  assert(state.players[0].score === 5, '重复事件与轮询共用 guard，不应重复加分')
+  assert(state.players[0].promptInit === 1, '重复事件与轮询共用 guard，不应重复触发结算提示')
+}
+
+// #4 噪声豁免：人数仍合法时，棋子销毁等非玩家实体移除事件不得触发结算提示。
+{
+  const state = {
+    matchPhase: MatchPhase.PLAYING,
+    playerCount: 2,
+    handled: false,
+    players: [
+      { id: 1, score: 0, promptInit: 0, settleButton: false },
+      { id: 2, score: 0, promptInit: 0, settleButton: false }
+    ]
+  }
+  // 棋子被销毁会触发实体移除/销毁事件，但两名玩家仍在场。
+  wakeOnEntityRemoved(state)
+  assert(
+    state.players.every((p) => p.promptInit === 0 && p.score === 0 && p.settleButton === false),
+    '棋子销毁等非玩家实体移除在人数仍合法时不应触发结算提示'
+  )
+}
+
+// #4 rematch 清场豁免：回到准备(LOBBY)时清场移除棋子，事件不得触发结算提示。
+{
+  const state = {
+    matchPhase: MatchPhase.LOBBY,
+    playerCount: 2,
+    handled: false,
+    players: [{ id: 1, score: 0, promptInit: 0, settleButton: false }]
+  }
+  // rematch 清场在 matchPhase==LOBBY 下发生，逐子移除会触发事件。
+  wakeOnEntityRemoved(state)
+  wakeOnEntityRemoved(state)
+  assert(
+    state.players[0].promptInit === 0,
+    'rematch 清场（LOBBY）期间的实体移除事件不应触发结算提示'
+  )
+}
+
 if (failures.length > 0) {
   console.error(`opponent-exit prompt regression FAILED (${failures.length}):`)
   for (const f of failures) console.error(`  ✗ ${f}`)
   process.exit(1)
 }
-console.log('opponent-exit prompt regression passed (static invariants + 6 scenarios).')
+console.log('opponent-exit prompt regression passed (static invariants + 9 scenarios).')
