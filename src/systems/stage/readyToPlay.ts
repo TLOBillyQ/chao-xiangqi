@@ -11,44 +11,17 @@ import {
   ui_broadcastFxFull,
   ui_broadcastText
 } from '../../contracts/editorIds'
-import { chessInterval, firstChessPos, getServerStageEntity, initPos } from '../../contracts/stage'
-import { Tick_PlayerExit, Tick_SendCurStageToOther } from '../../contracts/timers'
-import { PlayerVar, StageVar } from '../../contracts/variables'
-import { gstsServerInitializeFirstTurnIfNeeded } from '../turn/turnState'
+import { chessInterval, firstChessPos, initPos } from '../../contracts/stage'
+import { Tick_SendCurStageToOther } from '../../contracts/timers'
+import { PlayerVar } from '../../contracts/variables'
 
 /**
- * readyToPlay(1073741849) 同 ID 接管的开局玩法（挂【关卡实体】，由 playerReady 全局信号驱动）。
- *
- * 真值见 recovered/orphan-nodegraphs/1073741849_readyToPlay.readable.txt。关键分工：
- * ① 本图独有=摆盘（传送预设点/切游玩布局/双方物件镜头/环境/剩余棋子=16/清场/摆16+16/GameStage=2/PlayerExit）；
- * ② 首回合（红先手/curPlayer/倒计时）复用 turnState.gstsServerInitializeFirstTurnIfNeeded（已加同款「已准备」闸），
- *    不在本图重抄，杜绝 1849↔turnState 双初始化；③ 清场用倒序索引（避开 0bde1c2 的 while-removeEntity 死循环）；
- * ④ 镜头锚/预设点/棋子预制 GUID 已对活地图 1073741868 字节核验存在。
+ * readyToPlay(1073741849) 同 ID 接管。挂【关卡实体】。ADR-0003 后本文件降为【摆盘 helper 集】：
+ * 开局编排（可开局闸 + 置 PLAYING + 授首回合 + 起倒计时）已上移 systems/stage/matchLifecycle，
+ * 本文件只导出供其调用的三个摆盘步骤——gstsServerSetupReadyPlayers / gstsServerClearBoard / gstsServerPlacePieces。
+ * 真值见 recovered/orphan-nodegraphs/1073741849_readyToPlay.readable.txt；清场用倒序索引（避开 0bde1c2 的死循环）；
+ * 镜头锚/预设点/棋子预制 GUID 已对活地图 1073741868 字节核验存在。
  */
-
-/** 入口主链：算「全员已准备」闸（playerReady 每次单方按准备都触发）→ 摆盘 → 清场 → 摆子 → GameStage=2/PlayerExit → 起首回合。 */
-export function gstsServerReadyToPlay() {
-  let players = gsts.f.getListOfPlayerEntitiesOnTheField()
-  //版本戳（写关卡实体，供「切换视角」dump 确认 TS 接管生效）
-  getServerStageEntity().set('gstsTakeoverReadyToPlay', '1849-v1')
-  let allReady = true
-  for (let i = 0; i < players.length; i++) {
-    if (players[i].get(PlayerVar.playerStage).asType('float') != 1) {
-      allReady = false
-    }
-  }
-  if (allReady) {
-    gstsServerSetupReadyPlayers()
-    gstsServerClearBoard()
-    gstsServerPlacePieces()
-    let stage = getServerStageEntity()
-    stage.set(StageVar.gameStage, 2)
-    //原图 Node101 时长列表 [count=1,value=5] → 5s 循环退出探测
-    gsts.f.startTimer(stage, Tick_PlayerExit, true, [5])
-    //首回合统一由 turnState 起（红先手/倒计时/curPlayer/turnInitialized）
-    gstsServerInitializeFirstTurnIfNeeded()
-  }
-}
 
 /** 逐玩家开局态：传送预设点、停状态同步计时器、切游玩布局、环境、剩余棋子=16、隐播报、按阵营设物件镜头、播报动效、step 归零。 */
 export function gstsServerSetupReadyPlayers() {
@@ -99,19 +72,15 @@ export function gstsServerPlacePieces() {
       firstChessPos,
       gsts.f._3dVectorZoom(redPos[i], chessInterval)
     )
-    gsts.f.createPrefab(redName[i], redWorld, vec3([0, 90, 0]), redOwner, true, 1, [EntityTag.Piece])
+    gsts.f.createPrefab(redName[i], redWorld, vec3([0, 90, 0]), redOwner, true, 1, [
+      EntityTag.Piece
+    ])
     let blackWorld = gsts.f._3dVectorAddition(
       firstChessPos,
       gsts.f._3dVectorZoom(blackPos[i], chessInterval)
     )
-    gsts.f.createPrefab(
-      blackName[i],
-      blackWorld,
-      vec3([0, 270, 0]),
-      blackOwner,
-      true,
-      1,
-      [EntityTag.Piece]
-    )
+    gsts.f.createPrefab(blackName[i], blackWorld, vec3([0, 270, 0]), blackOwner, true, 1, [
+      EntityTag.Piece
+    ])
   }
 }

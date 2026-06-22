@@ -16,13 +16,9 @@ import {
   ui_outOfBoundsBroadcast,
   ui_winPanel
 } from '../../contracts/editorIds'
-import { getServerStageEntity } from '../../contracts/stage'
-import {
-  GlobalTimer_BlackCountdown,
-  GlobalTimer_RedCountdown,
-  Tick_CheckChessMove
-} from '../../contracts/timers'
-import { PieceVar, PlayerVar, StageVar } from '../../contracts/variables'
+import { getServerStageEntity, MatchPhase } from '../../contracts/stage'
+import { PlayerVar, StageVar } from '../../contracts/variables'
+import { gstsServerResetToLobby } from './matchLifecycle'
 
 /**
  * chessDestroy(1073741850) 同 ID 接管的玩法逻辑（挂【关卡实体】，由「实体销毁时」驱动）。
@@ -36,7 +32,7 @@ import { PieceVar, PlayerVar, StageVar } from '../../contracts/variables'
 
 type PlayerEntity = typeof self
 
-/** 实体销毁时主链：双闸（是棋子 + GameStage!=3）→ 出界播报；棋子类型=='帅' → rematch。 */
+/** 实体销毁时主链：双闸（是棋子 + matchPhase==PLAYING）→ 出界播报；棋子类型=='帅' → rematch。 */
 export function gstsServerOnChessDestroyed(
   curPieceType: string,
   curFaction: string,
@@ -47,7 +43,8 @@ export function gstsServerOnChessDestroyed(
   //注入版本戳（写关卡实体，供「切换视角」dump 读取确认 TS 接管生效）
   stage.set('gstsTakeoverChessDestroy', '1850-v1')
   if (curPieceType != '') {
-    if (stage.get(StageVar.gameStage).asType('float') != 3) {
+    //ADR-0003 决策5：出界播报仅在 PLAYING 有效（取代 GameStage!=3）；LOBBY 期销毁含 rematch 清场不再误报
+    if (stage.get(StageVar.matchPhase).asType('float') == MatchPhase.PLAYING) {
       gstsServerReportOutOfBounds(curFaction, curPieceType, ownerPlayer)
     }
     if (curPieceType == '帅') {
@@ -98,7 +95,7 @@ export function gstsServerReportOutOfBounds(
 export function gstsServerHandleGeneralDeath(deadFaction: faction) {
   let players = gsts.f.getListOfPlayerEntitiesOnTheField()
   //输家 = 被销毁帅/将的同阵营玩家
-  let loser = gsts.f.getEntityListBySpecifiedFaction(players, deadFaction)[0] as PlayerEntity
+  let loser = gsts.f.getEntityListBySpecifiedFaction(players, deadFaction)[0]
   gstsServerSetupPlayerAfterGame(loser, ui_losePanel, -10n)
   gsts.f.modifyEnvironmentSettings(env_loseAmbience, [loser], false, 0)
   //赢家 = 对方阵营
@@ -108,7 +105,7 @@ export function gstsServerHandleGeneralDeath(deadFaction: faction) {
   } else {
     winnerFaction = factionRed
   }
-  let winner = gsts.f.getEntityListBySpecifiedFaction(players, winnerFaction)[0] as PlayerEntity
+  let winner = gsts.f.getEntityListBySpecifiedFaction(players, winnerFaction)[0]
   gstsServerSetupPlayerAfterGame(winner, ui_winPanel, 20n)
   gstsServerResetForRematch()
 }
@@ -134,23 +131,12 @@ export function gstsServerSetupPlayerAfterGame(
   p.setUiControlStatus(ui_broadcastText, UIControlGroupStatus.Off)
 }
 
-/** 整局重置再来一局：GameStage 先 3 后 1、canChange 关、红黑倒计时关、暂停-清-恢复 moveList、双方剩余棋子=16、清三播报队列。 */
+/** 整局重置再来一局：生命周期重置（→LOBBY/锁控/压双方倒计时/清 moveList/剩余棋子=16）上移 matchLifecycle.resetToLobby；本图只保留清三出界播报队列。 */
 export function gstsServerResetForRematch() {
   let stage = getServerStageEntity()
-  let p1 = player(1) as PlayerEntity
-  let p2 = player(2) as PlayerEntity
-  stage.set(StageVar.gameStage, 3)
-  stage.set(StageVar.canChange, false)
-  stage.set(StageVar.gameStage, 1)
-  gsts.f.modifyGlobalTimer(stage, GlobalTimer_RedCountdown, -999)
-  gsts.f.modifyGlobalTimer(stage, GlobalTimer_BlackCountdown, -999)
-  gsts.f.pauseTimer(stage, Tick_CheckChessMove)
-  let moveList = stage.get(StageVar.moveList).asType('entity_list')
-  gsts.f.clearList(moveList)
-  stage.set(StageVar.moveList, moveList)
-  gsts.f.resumeTimer(stage, Tick_CheckChessMove)
-  p1.set(PlayerVar.remainPieces, 16n)
-  p2.set(PlayerVar.remainPieces, 16n)
+  //生命周期部分（ADR-0003 决策7 / R1）：先置 LOBBY，再锁控/压双方倒计时/清 moveList/重置剩余棋子
+  gstsServerResetToLobby()
+  //清三出界播报队列（出界 UI 状态属本图独有职责，不迁 matchLifecycle）
   let listFaction = stage.get(StageVar.outBroadcastFaction).asType('str_list')
   gsts.f.clearList(listFaction)
   stage.set(StageVar.outBroadcastFaction, listFaction)

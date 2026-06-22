@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "regression": "node scripts/check-turn-state-regression.mjs && node scripts/repro-matchstart.mjs",
     "lint": "eslint .",
     "build": "gsts --lang zh-CN",
     "dev": "gsts --lang zh-CN dev",

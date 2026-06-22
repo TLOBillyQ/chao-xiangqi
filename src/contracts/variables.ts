@@ -1,12 +1,13 @@
 export const StageVar = {
   moveList: 'moveList',
   curPlayer: 'curPlayer',
-  canChange: 'canChange',
   settled: 'settled',
   errorMsg: 'ErrorMsg',
   angleRand: 'AngleRand',
-  //chessDestroy(1850) 接管：总状态闸(==3 进行中)；出界播报三队列 + 播报者昵称（均挂关卡实体）
-  gameStage: 'GameStage',
+  //两轴生命周期（关卡实体 float），取代旧 GameStage(1/2/3)+canChange+turnInitialized。ADR-0003。
+  matchPhase: 'matchPhase',
+  turnPhase: 'turnPhase',
+  //chessDestroy(1850)：出界播报三队列 + 播报者昵称（均挂关卡实体）
   outBroadcastFaction: '播报-出界阵营',
   outBroadcastPiece: '播报-出界棋子',
   outBroadcastRemain: '播报-剩余棋子',

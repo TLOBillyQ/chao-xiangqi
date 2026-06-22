@@ -87,9 +87,9 @@ export const Wall = {
   center: -16.16
 }
 
-//开启对局所需的最少在场人数：首回合初始化（含倒计时启动）在满员前不触发。
-//发版用 2；单人试玩调试可临时改 1 以便独自进入对局。
-export const REQUIRED_PLAYERS = 2
+//两轴生命周期取值（float 数值常量，非引擎枚举；比较用 ==/!=）。用 1/2 不用 0，避开未初始化默认 0 与 scanPiece minDist 哨兵混淆。
+export const MatchPhase = { LOBBY: 1, PLAYING: 2 } as const
+export const TurnPhase = { ACTIVE: 1, HANDOFF: 2 } as const
 
 /**
  * 获取关卡实体

@@ -62,9 +62,10 @@ ADR-0002 为“同 ID 接管”刻意做了 **readyToPlay 管摆盘、turnState 
 ## 验证
 
 - **探针先行（已完成 2026-06-21）**：曾注入微探针，用「切换视角」dump 在单人试玩与双人下读 `queryGameModeAndPlayerNumber()`。**读数：单人试玩 playerCount==1、双人==2**，唯一未验假设成立。结论：决策 2 的 mode-aware 谓词成立；且 `playerCount` 既已证实可靠（单人 1／双人 2），实现时**优先采用 `quorum = playerCount`（Q3 option B）**——更简洁，连 `playMode` 分支一并省去，彻底删 `REQUIRED_PLAYERS`。注：该探针走弹屏（`gstsServerErrorMsg`）**不落 `Beyond_Debug_Log`**，读数靠局内肉眼；验证后已移除。
-- **决策级回归**：以 diagnosing-bugs 阶段建的 `repro-p2-select.mjs` 同型谐振——把可开局/applyTurn 决策逻辑端口为纯 JS，断言 单人试玩(P1/P2)/双人(t1/t2) 四场景的 `可选子` 结果。red→green 守住 bug。**升级 `check-turn-state-regression.mjs`**：从“正则核代码存在”改为“核可达性/行为”，消除假绿。
-- 每张接管图入口写唯一版本戳；关键转换打 `gstsServerErrorMsg` 探针。
-- 局内：单人试玩(玩家2)能选子；双人首回合红先手、红走完黑可选；rematch 清场无误报出界。
+- **决策级回归（已落地）**：新建 `scripts/repro-matchstart.mjs`——把 `canStartMatch`/首发选择/`applyTurn`/`switchTurn` 目标逻辑端口为纯 JS，断言 7 场景：单人黑(S1=原 bug 现场，黑方可选子)、单人红(S2)、双人未全准备(S3 不开局)、双人全准备(S4 红先手)、单人但 quorum=2(S5 不开局，mode-aware)、LOBBY/HANDOFF(S6 全锁控)、回合切换目标(S7 含单人留本方)。**升级 `check-turn-state-regression.mjs`**：从“正则核代码存在”（假绿——旧脚本还在找已删的 `InitializeFirstTurnIfNeeded`）改为 16 条静态不变量（旧符号零代码残留 + `isControl` 投射收敛到 applyTurn+3 豁免 + 开局触发唯一 + 摆盘 helper 只被 matchLifecycle 调 + 守门到位）。两脚本并入 `npm run regression`。
+- 每张接管图入口写唯一版本戳（`gstsTakeoverReadyToPlay='1849-v2'`、`gstsTakeoverChessDestroy='1850-v1'`、`gstsInjectVerify='2026-06-21-lifecycle-1'`）；关键转换可打 `gstsServerErrorMsg` 探针。
+- 局内（终验，待执行）：单人试玩(玩家2)能选子；双人首回合红先手、红走完黑可选；rematch 清场无误报出界。
+- **实现 + 对抗审查（已完成 2026-06-21）**：S1–S8 落地（contracts→`matchLifecycle`→`turnState`/接管图→`chessDestroy`→删旧键→回归脚本）。五道验证绿：`typecheck` / `eslint`（改动 8 文件，顺带清 `chessDestroy` 2 处 no-op 断言 + 1 未用 import）/ `regression`（16 不变量 + 7 场景）/ `build`（编译 + 生成 .gia + 注入活地图 `1073741868.gil`，图 1842/1849/1850）。build 中修一处 gsts 类型陷阱：`canStartMatch` 的 `float(playerCount) >= players.length` 触发 `greaterThanOrEqualTo` 泛型不匹配（`get_list_length` 输出 int），改 `int(players.length) >= playerCount`（两边同 int）。随后 5 维度对抗审查（行为保真对照 `git show b4049fa~1:recovered/...` 真值 + 旧版 TS）：**0 确认漂移**，仅 2 个 low 健壮性 nit（`matchPhase` 未初始化方向反转、`playerCount==0` 越界），均经查真值驳回为不可达 non-issue。审查另确认：回合切换 HANDOFF 倒计时双压等价旧版单压、`curPlayer` 仍 2s 后切、L50 闸 `matchPhase==PLAYING` 是决策 5 有意修正清场误报（非回归）。
 
 ## 影响
 
