@@ -1,4 +1,5 @@
 import { factionBlack, factionRed } from '../../contracts/editorIds'
+import { NameplateVar } from '../../contracts/variables'
 
 /**
  * 把单个玩家的昵称写进其阵营对应的「玩家位置」底座物件的自定义变量「玩家昵称」，
@@ -20,9 +21,9 @@ export function gstsServerLabelPlayerPosition(playerEntity: typeof self) {
   let nick = gsts.f.getPlayerNickname(playerEntity)
   if (f == factionRed) {
     let redPos = gsts.f.queryEntityByGuid(1077937032n)
-    redPos.set('玩家昵称', nick)
+    redPos.set(NameplateVar.nickname, nick)
   } else if (f == factionBlack) {
     let blackPos = gsts.f.queryEntityByGuid(1077937033n)
-    blackPos.set('玩家昵称', nick)
+    blackPos.set(NameplateVar.nickname, nick)
   }
 }

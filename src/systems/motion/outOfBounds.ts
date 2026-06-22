@@ -1,9 +1,8 @@
 import { entity } from 'genshin-ts/runtime/value'
 
-import { factionRed } from '../../contracts/editorIds'
 import { Wall } from '../../contracts/stage'
 import { Tick_OutCheck } from '../../contracts/timers'
-import * as Settle from '../settlement/settlement'
+import { PieceVar } from '../../contracts/variables'
 
 /**
  * 棋子出界判断
@@ -17,15 +16,8 @@ export function gstsServerOutCheck(checkentity: entity) {
   ) {
     //幂等保护：出界检测定时器(0.03s循环)在棋子3秒后销毁前可能反复进入本分支，
     //同一枚子只处理一次出界，避免重复结算/重复落子动画/重复销毁。
-    if (!checkentity.get('isOut').asType('bool')) {
-      checkentity.set('isOut', true)
-      let _pieceType = checkentity.get('棋子类型').asType('str')
-      let _chessFaction = gsts.f.queryEntityFaction(checkentity)
-      //将/帅被吃（出界）即终局：记录是否为王、以及被吃方是否红方
-      let isKing = _pieceType == '帅' || _pieceType == '将'
-      let redIsLoser = _chessFaction == factionRed
-      //获取拥有者实体
-      let _ownerEntity = checkentity.owner()
+    if (!checkentity.get(PieceVar.isOut).asType('bool')) {
+      checkentity.set(PieceVar.isOut, true)
       //删除所有运动器
       gsts.f.stopAndDeleteBasicMotionDevice(checkentity, '', true)
       gsts.f.stopTimer(checkentity, Tick_OutCheck)
@@ -107,17 +99,8 @@ export function gstsServerOutCheck(checkentity: entity) {
         )
       }, 1000)
       setTimeout((_e) => {
-        //销毁棋子
-        //checkentity.activateDisableModelDisplay(false)
+        //销毁棋子——销毁会触发关卡实体「实体销毁时」，将帅死亡 rematch 由 chessDestroy(1850) 接管
         capturedEntity.destroy()
-        //若被吃的是将/帅，落子动画结束后结算：被吃方判负、对方判胜
-        if (isKing) {
-          if (redIsLoser) {
-            Settle.gstsServerSettleGame(false)
-          } else {
-            Settle.gstsServerSettleGame(true)
-          }
-        }
       }, 3000)
     }
   }

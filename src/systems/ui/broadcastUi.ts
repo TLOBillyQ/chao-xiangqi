@@ -3,6 +3,7 @@ import type { entity } from 'genshin-ts/runtime/value'
 
 import * as UIControl from '../../contracts/editorIds'
 import { getServerStageEntity } from '../../contracts/stage'
+import { StageVar } from '../../contracts/variables'
 
 export function gstsServerErrorMsg(msg: string, conplayer: entity, isMine: boolean) {
   conplayer.setUiControlStatus(UIControl.ui_broadcastRoot, UIControlGroupStatus.On)
@@ -17,7 +18,7 @@ export function gstsServerErrorMsg(msg: string, conplayer: entity, isMine: boole
     conplayer.setUiControlStatus(UIControl.ui_broadcastEnemy, UIControlGroupStatus.Off)
     conplayer.setUiControlStatus(UIControl.ui_broadcastMine, UIControlGroupStatus.On)
   }
-  getServerStageEntity().set('ErrorMsg', msg)
+  getServerStageEntity().set(StageVar.errorMsg, msg)
   setTimeout((_e) => {
     conplayer.setUiControlStatus(UIControl.ui_broadcastRoot, UIControlGroupStatus.Off)
   }, 3000)

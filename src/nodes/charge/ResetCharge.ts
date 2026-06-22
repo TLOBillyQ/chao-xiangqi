@@ -1,5 +1,6 @@
 import { g } from 'genshin-ts/runtime/core'
 
+import { PlayerVar } from '../../contracts/variables'
 import { Signal } from '../../resources/signals'
 
 //重置充能
@@ -16,6 +17,6 @@ g.server({
   }
   if (isForSelf) {
     let playentity = f.getSelfEntity()
-    f.setCustomVariable(playentity, 'chargePower', 0)
+    f.setCustomVariable(playentity, PlayerVar.chargePower, 0)
   }
 })

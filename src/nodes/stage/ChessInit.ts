@@ -1,49 +1,39 @@
 import { g } from 'genshin-ts/runtime/core'
 
-import {
-  gstsServerRefreshBothJoined,
-  gstsServerSettleIfOpponentAbsent,
-  gstsServerSettleIfPlayerLeft
-} from '../../systems/settlement/settlement'
-import {
-  gstsServerCheckPieceMovementState,
-  gstsServerInitializeFirstTurnIfNeeded
-} from '../../systems/turn/turnState'
+import { MatchPhase, TurnPhase } from '../../contracts/stage'
+import { Tick_CheckChessMove, Tick_PlayerExit } from '../../contracts/timers'
+import { StageVar } from '../../contracts/variables'
+import { gstsServerCheckPlayerExitQuorum } from '../../systems/stage/matchLifecycle'
+import { gstsServerCheckPieceMovementState } from '../../systems/turn/turnState'
+import { gstsServerSyncOpponentNicknamesOnBothJoined } from '../../systems/ui/opponentInfoUi'
 
 g.server({
   id: 1073741842,
   name: 'ChessInitGraph'
 }).on('whenEntityIsCreated', (_evt, f) => {
-  f.startTimer(self, 'CheckChessMovestage', true, [3])
-  let moveList = self.get('moveList').asType('entity_list')
+  f.startTimer(self, Tick_CheckChessMove, true, [3])
+  let moveList = self.get(StageVar.moveList).asType('entity_list')
   gsts.f.clearList(moveList)
-  self.set('moveList', moveList)
-  self.set('canChange', true)
-  self.set('turnInitialized', false)
-  //结算一次性保护标记
-  self.set('settled', false)
-  //结算胜负结果（红方是否获胜），显示结算 UI 时写入、点击结算按钮时读回
-  self.set('redWin', false)
-  //本局是否曾满员(2人)——退出检测用，避免单人试玩/吃子销毁误判为有人离场
-  self.set('bothJoined', false)
-  //对方缺席超时判定的等待周期计数（实测约1秒/周期，见 gstsServerSettleIfOpponentAbsent）
-  self.set('waitTicks', 0)
-  self.set('gstsInjectVerify', '2026-06-10-settle-clean-1')
+  self.set(StageVar.moveList, moveList)
+  //两轴生命周期初值（取代 canChange=true/turnInitialized=false）：关卡创建即置 LOBBY/ACTIVE，
+  //保 startMatchIfReady 首读幂等闸 matchPhase 有值（自定义变量 set 即创建，注入后需重进关卡生效）。
+  self.set(StageVar.matchPhase, MatchPhase.LOBBY)
+  self.set(StageVar.turnPhase, TurnPhase.ACTIVE)
+  //本局是否曾满员(2人)——满员单触发同步对方昵称用（见 gstsServerSyncOpponentNicknamesOnBothJoined）
+  self.set(StageVar.bothJoined, false)
+  self.set(StageVar.opponentExitPromptHandled, false)
+  self.set(StageVar.injectVerify, '2026-06-21-lifecycle-1')
 })
 
 g.server({
   id: 1073741842
 }).on('whenTimerIsTriggered', (_evt, _f) => {
-  gstsServerRefreshBothJoined()
-  gstsServerInitializeFirstTurnIfNeeded()
-  //对方从未加入时的缺席超时结算（约1分钟，见 OPPONENT_WAIT_TICKS）
-  gstsServerSettleIfOpponentAbsent()
-  gstsServerCheckPieceMovementState()
-})
-
-g.server({
-  id: 1073741842
-}).on('whenEntityIsRemovedDestroyed', (_evt, _f) => {
-  //引擎无「玩家离开」事件；玩家退出会移除其玩家实体，借「实体移除/销毁时」探测中途退出
-  gstsServerSettleIfPlayerLeft()
+  if (_evt.timerName == Tick_CheckChessMove) {
+    //满员首次时互写对方昵称（原 settlement.gstsServerRefreshBothJoined 的昵称职责）
+    gstsServerSyncOpponentNicknamesOnBothJoined()
+    //ADR-0003 决策6：删去首回合 init 调用（开局改由 playerReady 事件驱动，去 #7 双触发）；本计时器只留昵称同步 + 棋子静止检测。
+    gstsServerCheckPieceMovementState()
+  } else if (_evt.timerName == Tick_PlayerExit) {
+    gstsServerCheckPlayerExitQuorum()
+  }
 })

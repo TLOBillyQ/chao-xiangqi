@@ -1,94 +1,42 @@
-import { UIControlGroupStatus } from 'genshin-ts/definitions/enum'
 import { entity } from 'genshin-ts/runtime/value'
 
 import { factionBlack, factionRed } from '../../contracts/editorIds'
-import { getServerStageEntity, REQUIRED_PLAYERS } from '../../contracts/stage'
-import {
-  GlobalTimer_BlackCountdown,
-  GlobalTimer_RedCountdown,
-  timersId
-} from '../../contracts/timers'
+import { getServerStageEntity, MatchPhase, TurnPhase } from '../../contracts/stage'
+import { PieceVar, PlayerVar, StageVar } from '../../contracts/variables'
+import { Signal } from '../../resources/signals'
+import { gstsServerApplyTurn } from '../stage/matchLifecycle'
 import { gstsServerErrorMsg as ErrorMsg } from '../ui/broadcastUi'
 
 /**
- * 首回合必须由代码统一初始化，不能依赖编辑器模板里 stage.curPlayer / 玩家 isControl 的默认值。
- * 试玩可选择以 player1 或 player2 进入；单人试玩时在场玩家列表可能只有红方或只有黑方。
- * 因此：双人在场时红方先手；单人试玩时谁在场就先让谁可操作，避免把控制权切给缺席玩家。
+ * 回合推进 helper（ADR-0003 后降级）。开局/首回合判定（可开局闸 + 首发选择）与 isControl/UI/倒计时投射已
+ * 上移 systems/stage/matchLifecycle。本文件只留：回合切换 switchTurn、棋子静止检测、移动列表维护、可操作闸 canControl。
  */
-export function gstsServerInitializeFirstTurnIfNeeded() {
-  let StageEntity = getServerStageEntity()
-  let turnInitialized = StageEntity.get('turnInitialized').asType('bool')
 
-  if (!turnInitialized) {
-    let players = gsts.f.getListOfPlayerEntitiesOnTheField()
-    //低于 REQUIRED_PLAYERS（满员）前不开局：不设 curPlayer/isControl、不启动倒计时，玩家停在准备界面干等。
-    if (players.length >= REQUIRED_PLAYERS) {
-      let redPlayer = players[0] as entity
-      let blackPlayer = players[0] as entity
-      let hasRedPlayer = false
-      let hasBlackPlayer = false
-
-      for (let i = 0; i < players.length; i++) {
-        players[i].set('isControl', false)
-        players[i].setUiControlStatus(timersId.red, UIControlGroupStatus.Off)
-        players[i].setUiControlStatus(timersId.black, UIControlGroupStatus.Off)
-
-        if (gsts.f.queryEntityFaction(players[i]) == factionRed) {
-          redPlayer = players[i] as entity
-          hasRedPlayer = true
-        } else if (gsts.f.queryEntityFaction(players[i]) == factionBlack) {
-          blackPlayer = players[i] as entity
-          hasBlackPlayer = true
-        }
-      }
-
-      let targetPlayer = redPlayer
-      let targetIsRed = true
-      let hasTargetPlayer = false
-
-      if (hasRedPlayer) {
-        targetPlayer = redPlayer
-        targetIsRed = true
-        hasTargetPlayer = true
-      } else if (hasBlackPlayer) {
-        targetPlayer = blackPlayer
-        targetIsRed = false
-        hasTargetPlayer = true
-      }
-
-      if (hasTargetPlayer) {
-        StageEntity.set('curPlayer', targetPlayer)
-        StageEntity.set('canChange', true)
-        StageEntity.set('turnInitialized', true)
-        targetPlayer.set('isControl', true)
-
-        if (targetIsRed) {
-          for (let i = 0; i < players.length; i++) {
-            players[i].setUiControlStatus(timersId.red, UIControlGroupStatus.On)
-          }
-          gsts.f.modifyGlobalTimer(StageEntity, GlobalTimer_BlackCountdown, -999)
-          gsts.f.startGlobalTimer(StageEntity, GlobalTimer_RedCountdown)
-        } else {
-          for (let i = 0; i < players.length; i++) {
-            players[i].setUiControlStatus(timersId.black, UIControlGroupStatus.On)
-          }
-          gsts.f.modifyGlobalTimer(StageEntity, GlobalTimer_RedCountdown, -999)
-          gsts.f.startGlobalTimer(StageEntity, GlobalTimer_BlackCountdown)
-        }
-      }
-    }
+/**
+ * 下一手该由谁行动（红/黑）。当前红方优先切黑、当前黑方优先切红；对方缺席则留本方。
+ * 保持 ADR-0003 的生命周期 gate 不变，只把红黑镜像选择收敛为一个小 interface。
+ */
+export function gstsServerNextActorIsRed(
+  currentFactionIsRed: boolean,
+  hasRed: boolean,
+  hasBlack: boolean
+): boolean {
+  let nextIsRed = hasRed
+  if (currentFactionIsRed) {
+    nextIsRed = !hasBlack
   }
+  return nextIsRed
 }
 
 /**
- * 实时检测棋子状态
+ * 实时检测棋子状态：moveList 内棋子速度衰减到阈值即移除；清空时触发回合切换。
  */
 export function gstsServerCheckPieceMovementState() {
-  let moveList = self.get('moveList').asType('entity_list')
+  let moveList = self.get(StageVar.moveList).asType('entity_list')
   for (let i = 0; i < moveList.length; i++) {
-    if (Vector3.Magnitude(moveList[i].get('moveVec').asType('vec3')) < 0.1) {
+    if (Vector3.Magnitude(moveList[i].get(PieceVar.moveVec).asType('vec3')) < 0.1) {
       gsts.f.removeValueFromList(moveList, i)
-      self.set('moveList', moveList)
+      self.set(StageVar.moveList, moveList)
       if (moveList.length <= 0) gstsServerSwitchTurn()
       break
     }
@@ -102,19 +50,19 @@ export function gstsServerCheckPieceMovementState() {
 export function gstsServerAddMoveEntity(moveEntity: entity) {
   let stage = getServerStageEntity()
 
-  let moveList = stage.get('moveList').asType('entity_list')
+  let moveList = stage.get(StageVar.moveList).asType('entity_list')
   // eslint-disable-next-line gsts/list-method-type-constraints
   if (!moveList.includes(moveEntity)) {
     // eslint-disable-next-line gsts/list-method-type-constraints
     moveList.push(moveEntity)
   }
-  stage.set('moveList', moveList)
+  stage.set(StageVar.moveList, moveList)
 }
 
 export function gstsServerCanControl(): number {
   let isCan = 1
   let stage = getServerStageEntity()
-  let moveList = stage.get('moveList').asType('entity_list')
+  let moveList = stage.get(StageVar.moveList).asType('entity_list')
 
   if (moveList.length > 0) {
     isCan = 0
@@ -123,56 +71,39 @@ export function gstsServerCanControl(): number {
   return isCan
 }
 
+/**
+ * 回合切换（PLAYING-ACTIVE → 对手）。守门 matchPhase==PLAYING && turnPhase==ACTIVE（取代 canChange：
+ * 防 HANDOFF 2s 窗口内重入、防 LOBBY 期误切）。流程：播报回合 banner（立即）→ 进 HANDOFF + applyTurn
+ * （锁控、两方倒计时全压）→ 2s 后切 curPlayer + 回 ACTIVE + applyTurn（授对手 + 起其方倒计时）。
+ * curPlayer 沿用原语义在 2s 后才切（HANDOFF 期 applyTurn 不读 curPlayer，零行为漂移）；
+ * isControl/UI 控件组/倒计时全部交 applyTurn，本函数不再直接散写。
+ */
 export function gstsServerSwitchTurn() {
-  let StageEntity = getServerStageEntity()
-  let playerEntity = StageEntity.get('curPlayer').asType('entity')
+  let stage = getServerStageEntity()
+  let playerEntity = stage.get(StageVar.curPlayer).asType('entity')
   let Faction = gsts.f.queryEntityFaction(playerEntity)
-  let canChange = StageEntity.get('canChange').asType('bool')
+  let canSwitch =
+    stage.get(StageVar.matchPhase).asType('float') == MatchPhase.PLAYING &&
+    stage.get(StageVar.turnPhase).asType('float') == TurnPhase.ACTIVE
   let players = gsts.f.getListOfPlayerEntitiesOnTheField()
 
-  if (players.length > 0) {
-    let redPlayer = players[0] as entity
-    let blackPlayer = players[0] as entity
-    let hasRedPlayer = false
-    let hasBlackPlayer = false
+  if (players.length > 0 && canSwitch) {
+    let reds = gsts.f.getEntityListBySpecifiedFaction(players, factionRed)
+    let blacks = gsts.f.getEntityListBySpecifiedFaction(players, factionBlack)
+    let hasRedPlayer = reds.length > 0
+    let hasBlackPlayer = blacks.length > 0
 
-    for (let i = 0; i < players.length; i++) {
-      if (gsts.f.queryEntityFaction(players[i]) == factionRed) {
-        redPlayer = players[i] as entity
-        hasRedPlayer = true
-      } else if (gsts.f.queryEntityFaction(players[i]) == factionBlack) {
-        blackPlayer = players[i] as entity
-        hasBlackPlayer = true
-      }
+    let targetIsRed = gstsServerNextActorIsRed(Faction == factionRed, hasRedPlayer, hasBlackPlayer)
+    let hasTargetPlayer = hasRedPlayer || hasBlackPlayer
+    let targetPlayer = players[0] as entity
+    if (targetIsRed && hasRedPlayer) {
+      targetPlayer = reds[0]
+    } else if (hasBlackPlayer) {
+      targetPlayer = blacks[0]
     }
 
-    let targetPlayer = redPlayer
-    let targetIsRed = true
-    let hasTargetPlayer = false
-
-    if (Faction == factionRed) {
-      if (hasBlackPlayer) {
-        targetPlayer = blackPlayer
-        targetIsRed = false
-        hasTargetPlayer = true
-      } else if (hasRedPlayer) {
-        targetPlayer = redPlayer
-        targetIsRed = true
-        hasTargetPlayer = true
-      }
-    } else {
-      if (hasRedPlayer) {
-        targetPlayer = redPlayer
-        targetIsRed = true
-        hasTargetPlayer = true
-      } else if (hasBlackPlayer) {
-        targetPlayer = blackPlayer
-        targetIsRed = false
-        hasTargetPlayer = true
-      }
-    }
-
-    if (canChange && hasTargetPlayer) {
+    if (hasTargetPlayer) {
+      //回合 banner 立即播报（D8：留此，不进 applyTurn——开局首回合不播报，保持与历史图 1849 一致）
       if (targetIsRed) {
         for (let i = 0; i < players.length; i++) {
           ErrorMsg(
@@ -191,41 +122,40 @@ export function gstsServerSwitchTurn() {
         }
       }
 
-      for (let i = 0; i < players.length; i++) {
-        players[i].set('isControl', false)
-        if (Faction == factionRed) {
-          players[i].setUiControlStatus(timersId.red, UIControlGroupStatus.Off)
-        } else {
-          players[i].setUiControlStatus(timersId.black, UIControlGroupStatus.Off)
-        }
-      }
+      //进 HANDOFF：锁控 + 压双方倒计时（curPlayer 暂不动，沿用原 2s 后切语义）
+      stage.set(StageVar.turnPhase, TurnPhase.HANDOFF)
+      gstsServerApplyTurn()
 
-      StageEntity.set('canChange', false)
-      StageEntity.set('turnInitialized', true)
-      if (Faction == factionRed) {
-        gsts.f.modifyGlobalTimer(StageEntity, GlobalTimer_RedCountdown, -999)
-      } else {
-        gsts.f.modifyGlobalTimer(StageEntity, GlobalTimer_BlackCountdown, -999)
-      }
-
+      //2s 后切 curPlayer 并回 ACTIVE，applyTurn 授对手控制权 + 起其方倒计时
       setTimeout((_e) => {
-        StageEntity.set('canChange', true)
-        targetPlayer.set('isControl', true)
-        let livePlayers = gsts.f.getListOfPlayerEntitiesOnTheField()
-        if (targetIsRed) {
-          for (let i = 0; i < livePlayers.length; i++) {
-            livePlayers[i].setUiControlStatus(timersId.red, UIControlGroupStatus.On)
-          }
-          StageEntity.set('curPlayer', targetPlayer)
-          gsts.f.startGlobalTimer(StageEntity, GlobalTimer_RedCountdown)
-        } else {
-          for (let i = 0; i < livePlayers.length; i++) {
-            livePlayers[i].setUiControlStatus(timersId.black, UIControlGroupStatus.On)
-          }
-          StageEntity.set('curPlayer', targetPlayer)
-          gsts.f.startGlobalTimer(StageEntity, GlobalTimer_BlackCountdown)
+        let s = getServerStageEntity()
+        //双发防护：节点图计时器池每次调度回调触发两次（local 日志实测 8 次调度→16 次回调，恰 2.0×）。
+        //仅当仍处 HANDOFF 时执行切换并原子清 HANDOFF；第二次回调见 ACTIVE 即空跑，
+        //杜绝把控制权二次翻面（=「播报红方回合→红方选不中→瞬切黑方」的真凶）。
+        if (s.get(StageVar.turnPhase).asType('float') == TurnPhase.HANDOFF) {
+          s.set(StageVar.curPlayer, targetPlayer)
+          s.set(StageVar.turnPhase, TurnPhase.ACTIVE)
+          gstsServerApplyTurn()
         }
       }, 2000)
+    }
+  }
+}
+
+/**
+ * 倒计时超时：该方倒计时触发且当前无子运动时，正在蓄力则强制发射，否则切回合。
+ * 原红/黑两份镜像逻辑在 playerTimers 节点里，这里按阵营参数化收敛。
+ */
+export function gstsServerHandleCountdownTimeout(targetFaction: typeof factionRed) {
+  if (gstsServerCanControl() == 1) {
+    let players = gsts.f.getEntityListBySpecifiedFaction(
+      gsts.f.getListOfPlayerEntitiesOnTheField(),
+      targetFaction
+    )
+    if (players.length > 0) {
+      let player = players[0]
+      if (player.get(PlayerVar.isCharge).asType('bool')) send(Signal.StopCharge)
+      else gstsServerSwitchTurn()
     }
   }
 }

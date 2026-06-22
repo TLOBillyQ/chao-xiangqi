@@ -24,6 +24,9 @@ export const changeDir = {
   right: 1073742737n
 }
 
+//方向控件根组：选中方向标签(EntityTag.Dir)实体时显隐（历史 ControlUI 图 1073741841 使用）
+export const ui_dirControlRoot = 1073741840n
+
 //蓄力按钮/蓄力条：必须用「游玩布局」(1073742453) 下的 ID——运行时每个玩家只生效一个布局，
 //职业配置引用的是游玩布局（结算/测试按钮/切换视角等实测可见控件均为其子级）。
 //「默认布局」下曾有一套同名副本（1073741988/1073741984，已从地图删除），编辑器控件
@@ -161,12 +164,11 @@ export const ui_broadcastFxFull = 1073742871n
 export const ui_broadcastEnemy = 1073742872n
 export const ui_broadcastMine = 1073742910n
 
-// TODO: 以下 UI 常量暂未被代码引用，待 UI 功能实现后使用或清理
-//退出游戏
+//退出游戏（StagePanel 接管：Settle_Stage + 发 ExitGame 信号）
 export const btn_exitGame = 1073742675n
-//点赞按钮
+//点赞按钮（StagePanel 接管：点按发 showLike 信号）
 export const btn_showLike = 1073742674n
-//局内查看规则
+//局内查看规则（与 btn_viewRules 同走规则页）
 export const btn_viewRulesInGame = 1073742875n
 
 export const str_playerWait = list('str', [
@@ -185,23 +187,36 @@ export const id_broadList = list(
   [1073742853, 1073742854, 1073742852, 1073742855, 1073742856]
 )
 
-export const btn_test = 1073743813n
+//模拟退出（顶替已从游戏侧删除的 btn_test/1073743813）：手动触发"对手离场"结算引导
+export const btn_simulateExit = 1073744808n
+//规则悬浮交互页 + 其列表容器（StagePanel 接管负责打开）
+export const ui_rulePage = 1073742934n
+export const ui_rulePageList = 1073742937n
+//点赞随机动效控件池（收到对方 showLike 时随机播一个；待局内核对是否仍在当前布局）
+export const likeAnimControls = list(
+  'int',
+  [1073742691, 1073742695, 1073742699, 1073742703, 1073742707, 1073742711]
+)
+//对手退出游戏时的「对方玩家状态」文案
+export const str_opponentExited = '对方已退出游戏'
 
-//==== 开局（readyToPlay / 历史图 1849）所需的编辑器侧资源 ====
-//游玩布局：开局后把玩家从准备界面切到此布局（运行时控件均为其子级，见上方 chargeBegin 说明）
-export const playLayout = 1073742453n
-//开局准备点：开局时把双方玩家传送到此预设点（预设点索引空间，与上方 EntityTag.Dir 的数值相同纯属巧合，互不相关）
-export const openingPresetPoint = 1073741826n
-//开局环境配置序号
-export const openingEnvironment = 1186988035n
-//双方主视角物件镜头：实体 GUID + 物件镜头「条目名」（必须用条目名而非模板名，与 settlement 的「准备镜头」同理）
-export const player1CameraEntityGuid = 1077937005n
-export const player2CameraEntityGuid = 1077937007n
-export const player1CameraEntry = '玩家1镜头'
-export const player2CameraEntry = '玩家2镜头'
+//—— chessDestroy(1850) 接管 ——
+//出界播报根/触发控件：出界时双方亮起，3s 后关
+export const ui_outOfBoundsBroadcast = 1073742864n
+//胜负后切换的准备/游玩布局（与 EntityTag.Piece 数值巧合，独立常量，勿复用 EntityTag.Piece）
+export const layout_ready = 1073741825n
+//输家氛围环境配置（modifyEnvironmentSettings 的 environmentConfigIndex）
+export const env_loseAmbience = 1186988036n
+//准备镜头锚实体 GUID（物件镜头条目名「准备镜头」；原散落于 playerCreate/settlement 的裸 GUID，集中此处）
+export const cameraAnchorGuid = 1077936985n
 
-//==== 历史图 StagePanel / chessDestroy 接管所需 UI ====
-//旧规则悬浮交互页关闭按钮；当前规则页关闭按钮为 1073742936，这里兼容历史图里的 1073742937
-export const btn_closeRulePageLegacy = 1073742937n
-//棋子出界播报面板
-export const ui_outOfBoundsPanel = 1073742864n
+//—— readyToPlay(1849) 接管 ——
+//开局传送预设点（双方传到此点；与 EntityTag.Dir 数值巧合，独立常量，勿复用 EntityTag.Dir）
+export const presetPoint_ready = 1073741826n
+//游玩布局（开局切到它；蓄力/方向/计时等控件均其子级，对齐 chargeBegin 注释）
+export const layout_play = 1073742453n
+//开局环境氛围（modifyEnvironmentSettings 的 environmentConfigIndex；与输家 env_loseAmbience/...036 成对）
+export const env_playAmbience = 1186988035n
+//双方物件镜头锚实体 GUID（条目名「玩家1镜头」=红 / 「玩家2镜头」=黑；已对活地图 1073741868 字节核验存在）
+export const camP1Anchor = 1077937005n
+export const camP2Anchor = 1077937007n
