@@ -4,10 +4,10 @@ import * as UIControl from '../../contracts/editorIds'
 import { StageVar } from '../../contracts/variables'
 import { Signal } from '../../resources/signals'
 import {
+  gstsServerPromptOpponentExitSettlement,
   gstsServerSetOpponentExited,
   gstsServerSetOpponentStageFromSignal,
   gstsServerShowLikeFromSignal,
-  gstsServerSimulateOpponentExit,
   gstsServerToggleReady,
   gstsServerViewRules
 } from '../../systems/ui/stagePanelUi'
@@ -44,7 +44,7 @@ g.server({ id: 1073741847, name: 'StagePanel' }).on('whenUiControlGroupIsTrigger
     gsts.f.settleStage()
     send(Signal.ExitGame)
   } else if (_evt.uiControlGroupCompositeIndex == UIControl.btn_simulateExit) {
-    gstsServerSimulateOpponentExit(self)
+    gstsServerPromptOpponentExitSettlement()
   }
 })
 

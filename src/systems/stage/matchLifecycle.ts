@@ -16,6 +16,7 @@ import {
   gstsServerPlacePieces,
   gstsServerSetupReadyPlayers
 } from './readyToPlay'
+import { gstsServerPromptOpponentExitSettlement } from '../ui/stagePanelUi'
 
 /**
  * 对局生命周期单一所有者（ADR-0003）。把原先散落的「开局闸/回合闸/生命周期码」收敛为两轴状态机：
@@ -43,6 +44,24 @@ export function gstsServerCanStartMatch(): boolean {
 }
 
 /**
+ * PlayerExit 轮询的法定人数判断：仅对进行中对局生效，按当前游玩方式返回的理论人数作 quorum。
+ */
+export function gstsServerHasLostLegalPlayerCount(): boolean {
+  let stage = getServerStageEntity()
+  let players = gsts.f.getListOfPlayerEntitiesOnTheField()
+  let quorum = gsts.f.queryGameModeAndPlayerNumber().playerCount
+  let isPlaying = stage.get(StageVar.matchPhase).asType('float') == MatchPhase.PLAYING
+  return isPlaying && int(players.length) < quorum
+}
+
+/** PlayerExit 轮询入口：人数不足时复用官方对手离场结算提示行为。 */
+export function gstsServerCheckPlayerExitQuorum() {
+  if (gstsServerHasLostLegalPlayerCount()) {
+    gstsServerPromptOpponentExitSettlement()
+  }
+}
+
+/**
  * 原子开局 LOBBY→PLAYING。幂等闸 matchPhase==LOBBY（取代 turnInitialized）；唯一开局触发点（ReadyToPlayGraph 的 playerReady）。
  * 顺序硬约束（ADR-0003 R1）：清场 removeEntity 必须在 matchPhase 仍为 LOBBY 时发生（否则销毁链误报出界），故置 PLAYING 排在摆盘之后。
  */
@@ -55,6 +74,7 @@ export function gstsServerStartMatchIfReady() {
       gstsServerSetupReadyPlayers()
       gstsServerClearBoard()
       gstsServerPlacePieces()
+      stage.set(StageVar.opponentExitPromptHandled, false)
       stage.set(StageVar.matchPhase, MatchPhase.PLAYING)
       //首发：红先手；单人缺红回退黑（镜像旧 InitializeFirstTurnIfNeeded 的受支持行为）
       let players = gsts.f.getListOfPlayerEntitiesOnTheField()
@@ -152,6 +172,7 @@ export function gstsServerResetToLobby() {
   let stage = getServerStageEntity()
   stage.set(StageVar.matchPhase, MatchPhase.LOBBY)
   stage.set(StageVar.turnPhase, TurnPhase.ACTIVE)
+  stage.set(StageVar.opponentExitPromptHandled, false)
   gstsServerApplyTurn()
   gsts.f.pauseTimer(stage, Tick_CheckChessMove)
   let moveList = stage.get(StageVar.moveList).asType('entity_list')

@@ -13,6 +13,7 @@ import { PlayerVar, StageVar } from '../../contracts/variables'
  */
 
 type PlayerEntity = typeof self
+const opponentExitSettlementMessage = '你的对手离开了游戏,你现在可以进行结算退出游戏'
 
 /** 准备切换：玩家状态 1(已准备) ↔ 3(取消/闲逛)，连带「未准备」标记。调用方随后发 playerReady 信号。 */
 export function gstsServerToggleReady(playerEntity: PlayerEntity) {
@@ -75,16 +76,17 @@ export function gstsServerShowLikeFromSignal(playerEntity: PlayerEntity, sender:
 }
 
 /**
- * 模拟退出（顶替已删 btn_test）：手动触发"对手离场"结算引导——中性系统播报 + 加分 + 亮结算按钮 + 定时收起。
+ * 单玩家对手离场结算提示初始化：中性系统播报 + 加分 + 亮结算按钮 + 定时收起。
+ * 调用方必须先过本次对手离场事件的 guard，避免重复加分或重复初始化 UI。
  */
-export function gstsServerSimulateOpponentExit(playerEntity: PlayerEntity) {
+export function gstsServerApplyOpponentExitSettlementPrompt(playerEntity: PlayerEntity) {
   //中性系统播报（敌/我标签都关）
   playerEntity.setUiControlStatus(UIControl.ui_broadcastRoot, UIControlGroupStatus.On)
   playerEntity.setUiControlStatus(UIControl.ui_broadcastText, UIControlGroupStatus.On)
   playerEntity.setUiControlStatus(UIControl.ui_broadcastEnemy, UIControlGroupStatus.Off)
   playerEntity.setUiControlStatus(UIControl.ui_broadcastMine, UIControlGroupStatus.Off)
   playerEntity.playUiAnimationOnControl(UIControl.ui_broadcastFxFull)
-  getServerStageEntity().set(StageVar.errorMsg, '你的对手离开了游戏,你现在可以进行结算退出游戏')
+  getServerStageEntity().set(StageVar.errorMsg, opponentExitSettlementMessage)
   //对手离场奖励 +5：CurScore 累加，并以「未定」状态(原图 4100=SettlementStatus_TBC，非胜利)写排位分
   let newScore = playerEntity.get(PlayerVar.curScore).asType('int') + 5n
   playerEntity.set(PlayerVar.curScore, newScore)
@@ -95,4 +97,21 @@ export function gstsServerSimulateOpponentExit(playerEntity: PlayerEntity) {
   setTimeout((_e) => {
     playerEntity.setUiControlStatus(UIControl.ui_broadcastRoot, UIControlGroupStatus.Off)
   }, 3000)
+}
+
+/**
+ * 官方对手离场结算提示行为。
+ *
+ * 模拟退出按钮和后续真实退出检测都应调用本入口，不再各自维护播报/加分/结算按钮分支。
+ * guard 挂关卡实体，确保同一次对手离场提示最多初始化一次；回到准备时由 matchLifecycle 清除。
+ */
+export function gstsServerPromptOpponentExitSettlement() {
+  let stage = getServerStageEntity()
+  if (stage.get(StageVar.opponentExitPromptHandled).asType('bool') == false) {
+    let players = gsts.f.getListOfPlayerEntitiesOnTheField()
+    for (let i = 0; i < players.length; i++) {
+      gstsServerApplyOpponentExitSettlementPrompt(players[i] as PlayerEntity)
+    }
+    stage.set(StageVar.opponentExitPromptHandled, true)
+  }
 }

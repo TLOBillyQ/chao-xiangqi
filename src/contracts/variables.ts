@@ -8,6 +8,8 @@ export const StageVar = {
   injectVerify: 'gstsInjectVerify',
   takeoverReadyToPlay: 'gstsTakeoverReadyToPlay',
   takeoverStagePanel: 'gstsTakeoverStagePanel',
+  //StagePanel：对手离场结算提示幂等 guard，关卡创建/回到准备时清 false。
+  opponentExitPromptHandled: 'opponentExitPromptHandled',
   //两轴生命周期（关卡实体 float），取代旧 GameStage(1/2/3)+canChange+turnInitialized。ADR-0003。
   matchPhase: 'matchPhase',
   turnPhase: 'turnPhase',

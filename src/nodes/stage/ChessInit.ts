@@ -1,8 +1,9 @@
 import { g } from 'genshin-ts/runtime/core'
 
 import { MatchPhase, TurnPhase } from '../../contracts/stage'
-import { Tick_CheckChessMove } from '../../contracts/timers'
+import { Tick_CheckChessMove, Tick_PlayerExit } from '../../contracts/timers'
 import { StageVar } from '../../contracts/variables'
+import { gstsServerCheckPlayerExitQuorum } from '../../systems/stage/matchLifecycle'
 import { gstsServerCheckPieceMovementState } from '../../systems/turn/turnState'
 import { gstsServerSyncOpponentNicknamesOnBothJoined } from '../../systems/ui/opponentInfoUi'
 
@@ -20,14 +21,19 @@ g.server({
   self.set(StageVar.turnPhase, TurnPhase.ACTIVE)
   //本局是否曾满员(2人)——满员单触发同步对方昵称用（见 gstsServerSyncOpponentNicknamesOnBothJoined）
   self.set(StageVar.bothJoined, false)
+  self.set(StageVar.opponentExitPromptHandled, false)
   self.set(StageVar.injectVerify, '2026-06-21-lifecycle-1')
 })
 
 g.server({
   id: 1073741842
 }).on('whenTimerIsTriggered', (_evt, _f) => {
-  //满员首次时互写对方昵称（原 settlement.gstsServerRefreshBothJoined 的昵称职责）
-  gstsServerSyncOpponentNicknamesOnBothJoined()
-  //ADR-0003 决策6：删去首回合 init 调用（开局改由 playerReady 事件驱动，去 #7 双触发）；本计时器只留昵称同步 + 棋子静止检测。
-  gstsServerCheckPieceMovementState()
+  if (_evt.timerName == Tick_CheckChessMove) {
+    //满员首次时互写对方昵称（原 settlement.gstsServerRefreshBothJoined 的昵称职责）
+    gstsServerSyncOpponentNicknamesOnBothJoined()
+    //ADR-0003 决策6：删去首回合 init 调用（开局改由 playerReady 事件驱动，去 #7 双触发）；本计时器只留昵称同步 + 棋子静止检测。
+    gstsServerCheckPieceMovementState()
+  } else if (_evt.timerName == Tick_PlayerExit) {
+    gstsServerCheckPlayerExitQuorum()
+  }
 })
