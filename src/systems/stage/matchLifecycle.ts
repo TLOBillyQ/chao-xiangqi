@@ -11,12 +11,12 @@ import {
   timersId
 } from '../../contracts/timers'
 import { PlayerVar, StageVar } from '../../contracts/variables'
+import { gstsServerPromptOpponentExitSettlement } from '../ui/stagePanelUi'
 import {
   gstsServerClearBoard,
   gstsServerPlacePieces,
   gstsServerSetupReadyPlayers
 } from './readyToPlay'
-import { gstsServerPromptOpponentExitSettlement } from '../ui/stagePanelUi'
 
 /**
  * 对局生命周期单一所有者（ADR-0003）。把原先散落的「开局闸/回合闸/生命周期码」收敛为两轴状态机：
