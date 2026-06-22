@@ -2,7 +2,8 @@ import { entity } from 'genshin-ts/runtime/value'
 
 import { factionBlack, factionRed } from '../../contracts/editorIds'
 import { getServerStageEntity, MatchPhase, TurnPhase } from '../../contracts/stage'
-import { StageVar } from '../../contracts/variables'
+import { PieceVar, PlayerVar, StageVar } from '../../contracts/variables'
+import { Signal } from '../../resources/signals'
 import { gstsServerApplyTurn } from '../stage/matchLifecycle'
 import { gstsServerErrorMsg as ErrorMsg } from '../ui/broadcastUi'
 
@@ -12,12 +13,28 @@ import { gstsServerErrorMsg as ErrorMsg } from '../ui/broadcastUi'
  */
 
 /**
+ * 下一手该由谁行动（红/黑）。当前红方优先切黑、当前黑方优先切红；对方缺席则留本方。
+ * 保持 ADR-0003 的生命周期 gate 不变，只把红黑镜像选择收敛为一个小 interface。
+ */
+export function gstsServerNextActorIsRed(
+  currentFactionIsRed: boolean,
+  hasRed: boolean,
+  hasBlack: boolean
+): boolean {
+  let nextIsRed = hasRed
+  if (currentFactionIsRed) {
+    nextIsRed = !hasBlack
+  }
+  return nextIsRed
+}
+
+/**
  * 实时检测棋子状态：moveList 内棋子速度衰减到阈值即移除；清空时触发回合切换。
  */
 export function gstsServerCheckPieceMovementState() {
   let moveList = self.get(StageVar.moveList).asType('entity_list')
   for (let i = 0; i < moveList.length; i++) {
-    if (Vector3.Magnitude(moveList[i].get('moveVec').asType('vec3')) < 0.1) {
+    if (Vector3.Magnitude(moveList[i].get(PieceVar.moveVec).asType('vec3')) < 0.1) {
       gsts.f.removeValueFromList(moveList, i)
       self.set(StageVar.moveList, moveList)
       if (moveList.length <= 0) gstsServerSwitchTurn()
@@ -71,45 +88,18 @@ export function gstsServerSwitchTurn() {
   let players = gsts.f.getListOfPlayerEntitiesOnTheField()
 
   if (players.length > 0 && canSwitch) {
-    let redPlayer = players[0] as entity
-    let blackPlayer = players[0] as entity
-    let hasRedPlayer = false
-    let hasBlackPlayer = false
+    let reds = gsts.f.getEntityListBySpecifiedFaction(players, factionRed)
+    let blacks = gsts.f.getEntityListBySpecifiedFaction(players, factionBlack)
+    let hasRedPlayer = reds.length > 0
+    let hasBlackPlayer = blacks.length > 0
 
-    for (let i = 0; i < players.length; i++) {
-      if (gsts.f.queryEntityFaction(players[i]) == factionRed) {
-        redPlayer = players[i] as entity
-        hasRedPlayer = true
-      } else if (gsts.f.queryEntityFaction(players[i]) == factionBlack) {
-        blackPlayer = players[i] as entity
-        hasBlackPlayer = true
-      }
-    }
-
-    let targetPlayer = redPlayer
-    let targetIsRed = true
-    let hasTargetPlayer = false
-
-    if (Faction == factionRed) {
-      if (hasBlackPlayer) {
-        targetPlayer = blackPlayer
-        targetIsRed = false
-        hasTargetPlayer = true
-      } else if (hasRedPlayer) {
-        targetPlayer = redPlayer
-        targetIsRed = true
-        hasTargetPlayer = true
-      }
-    } else {
-      if (hasRedPlayer) {
-        targetPlayer = redPlayer
-        targetIsRed = true
-        hasTargetPlayer = true
-      } else if (hasBlackPlayer) {
-        targetPlayer = blackPlayer
-        targetIsRed = false
-        hasTargetPlayer = true
-      }
+    let targetIsRed = gstsServerNextActorIsRed(Faction == factionRed, hasRedPlayer, hasBlackPlayer)
+    let hasTargetPlayer = hasRedPlayer || hasBlackPlayer
+    let targetPlayer = players[0] as entity
+    if (targetIsRed && hasRedPlayer) {
+      targetPlayer = reds[0]
+    } else if (hasBlackPlayer) {
+      targetPlayer = blacks[0]
     }
 
     if (hasTargetPlayer) {
@@ -148,6 +138,24 @@ export function gstsServerSwitchTurn() {
           gstsServerApplyTurn()
         }
       }, 2000)
+    }
+  }
+}
+
+/**
+ * 倒计时超时：该方倒计时触发且当前无子运动时，正在蓄力则强制发射，否则切回合。
+ * 原红/黑两份镜像逻辑在 playerTimers 节点里，这里按阵营参数化收敛。
+ */
+export function gstsServerHandleCountdownTimeout(targetFaction: typeof factionRed) {
+  if (gstsServerCanControl() == 1) {
+    let players = gsts.f.getEntityListBySpecifiedFaction(
+      gsts.f.getListOfPlayerEntitiesOnTheField(),
+      targetFaction
+    )
+    if (players.length > 0) {
+      let player = players[0]
+      if (player.get(PlayerVar.isCharge).asType('bool')) send(Signal.StopCharge)
+      else gstsServerSwitchTurn()
     }
   }
 }

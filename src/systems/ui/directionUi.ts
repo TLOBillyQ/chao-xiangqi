@@ -1,6 +1,8 @@
 import { UIControlGroupStatus } from 'genshin-ts/definitions/enum'
+import type { entity } from 'genshin-ts/runtime/value'
 
 import * as UIControl from '../../contracts/editorIds'
+import { PlayerVar } from '../../contracts/variables'
 
 type UiEntity = Pick<typeof self, 'get' | 'set' | 'setUiControlStatus'>
 
@@ -44,10 +46,23 @@ function gstsServerGetDirectionControlList(chessType: string) {
 }
 
 export function gstsServerActivateSwitchUI(playerEntity: UiEntity) {
-  playerEntity.set('curDirIndex', 0)
+  playerEntity.set(PlayerVar.curDirIndex, 0)
   playerEntity.setUiControlStatus(UIControl.changeDir.left, UIControlGroupStatus.On)
   playerEntity.setUiControlStatus(UIControl.changeDir.right, UIControlGroupStatus.On)
   playerEntity.setUiControlStatus(UIControl.chargeBegin, UIControlGroupStatus.On)
+}
+
+/**
+ * 按目标实体的标签显隐方向控件根组：命中方向标签(EntityTag.Dir)则打开，否则关闭。
+ * 原先内联在 ControlUISign 的 ControlUI 节点里，并硬编码控件 id 1073741840n。
+ */
+export function gstsServerToggleDirControlByTag(targetEntity: entity) {
+  let enteringTag = gsts.f.getEntityUnitTagList(targetEntity)[0]
+  if (enteringTag == UIControl.EntityTag.Dir) {
+    self.setUiControlStatus(UIControl.ui_dirControlRoot, UIControlGroupStatus.On)
+  } else {
+    self.setUiControlStatus(UIControl.ui_dirControlRoot, UIControlGroupStatus.Off)
+  }
 }
 
 export function gstsServerActivateDirectionUI(
@@ -109,8 +124,8 @@ export function gstsServerHideUIByChargeStop(playerEntity: UiEntity) {
 }
 
 export function gstsServerSwitchDirectionUI(playerEntity: UiEntity, isLeft: boolean) {
-  const curChooseChessType = playerEntity.get('curChessType').asType('str')
-  let curDirIndex = playerEntity.get('curDirIndex').asType('float')
+  const curChooseChessType = playerEntity.get(PlayerVar.curChessType).asType('str')
+  let curDirIndex = playerEntity.get(PlayerVar.curDirIndex).asType('float')
   let dirList = gstsServerGetDirectionControlList(curChooseChessType)
   let newIndex = curDirIndex
 
@@ -125,6 +140,6 @@ export function gstsServerSwitchDirectionUI(playerEntity: UiEntity, isLeft: bool
     if (newIndex > length - 1) newIndex = 0
   }
 
-  playerEntity.set('curDirIndex', newIndex)
+  playerEntity.set(PlayerVar.curDirIndex, newIndex)
   playerEntity.setUiControlStatus(dirList[idx(int(newIndex))], UIControlGroupStatus.On)
 }

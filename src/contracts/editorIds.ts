@@ -24,6 +24,9 @@ export const changeDir = {
   right: 1073742737n
 }
 
+//方向控件根组：选中方向标签(EntityTag.Dir)实体时显隐（历史 ControlUI 图 1073741841 使用）
+export const ui_dirControlRoot = 1073741840n
+
 //蓄力按钮/蓄力条：必须用「游玩布局」(1073742453) 下的 ID——运行时每个玩家只生效一个布局，
 //职业配置引用的是游玩布局（结算/测试按钮/切换视角等实测可见控件均为其子级）。
 //「默认布局」下曾有一套同名副本（1073741988/1073741984，已从地图删除），编辑器控件
@@ -190,9 +193,10 @@ export const btn_simulateExit = 1073744808n
 export const ui_rulePage = 1073742934n
 export const ui_rulePageList = 1073742937n
 //点赞随机动效控件池（收到对方 showLike 时随机播一个；待局内核对是否仍在当前布局）
-export const likeAnimControls = list('int', [
-  1073742691, 1073742695, 1073742699, 1073742703, 1073742707, 1073742711
-])
+export const likeAnimControls = list(
+  'int',
+  [1073742691, 1073742695, 1073742699, 1073742703, 1073742707, 1073742711]
+)
 //对手退出游戏时的「对方玩家状态」文案
 export const str_opponentExited = '对方已退出游戏'
 

@@ -1,15 +1,19 @@
 import { g } from 'genshin-ts/runtime/core'
 
-import { dirPrefabs } from '../../contracts/editorIds'
+import { PlayerVar } from '../../contracts/variables'
 import { Signal } from '../../resources/signals'
 import { gstsServerDestroyLandingMarker } from '../../systems/charge/landingPreview'
-import { gstsServerConfirmAndMovePiece } from '../../systems/piece/launch'
+import {
+  gstsServerDestroyOldDirectionMarkers,
+  gstsServerResolveSelectedDir
+} from '../../systems/piece/directionMarkers'
+import { gstsServerConfirmAndMovePiece, gstsServerFinishLaunch } from '../../systems/piece/launch'
 import { gstsServerHideUIByChargeStop } from '../../systems/ui/directionUi'
 
 g.server({
   id: 1073741838,
   name: 'StopCharge'
-}).onSignal(Signal.StopCharge, (_evt, f) => {
+}).onSignal(Signal.StopCharge, (_evt, _f) => {
   let isForSelf = false
   if (_evt.signalSourceEntity == self) {
     isForSelf = true
@@ -18,60 +22,19 @@ g.server({
     if (entity == self) isForSelf = true
   }
   if (isForSelf) {
-    if (self.get('ischarge').asType('bool')) {
-      let powerPercent = f.getCustomVariable(self, 'chargePower').asType('float') / 100
-      //send('MoveForward')
-
-      //销毁自身所有方向实体
-      let tagPrefabListRed = gsts.f.getEntitiesWithSpecifiedPrefabOnTheField(dirPrefabs.red)
-
-      while (tagPrefabListRed.length > 0) {
-        if (
-          self.get('curDirIndex').asType('float') ==
-          tagPrefabListRed[tagPrefabListRed.length - 1].get('dirUIIndex').asType('float')
-        ) {
-          //通知棋子移动
-          gstsServerConfirmAndMovePiece(
-            tagPrefabListRed[tagPrefabListRed.length - 1],
-            powerPercent,
-            self
-          )
-        }
-        gsts.f.destroyEntity(tagPrefabListRed[tagPrefabListRed.length - 1])
+    if (self.get(PlayerVar.isCharge).asType('bool')) {
+      let powerPercent = gsts.f.getCustomVariable(self, PlayerVar.chargePower).asType('float') / 100
+      let dirEntity = gstsServerResolveSelectedDir(self)
+      if (dirEntity != self) {
+        gstsServerConfirmAndMovePiece(dirEntity, powerPercent, self)
       }
-
-      let tagPrefabListBlack = gsts.f.getEntitiesWithSpecifiedPrefabOnTheField(dirPrefabs.black)
-      while (tagPrefabListBlack.length > 0) {
-        if (
-          self.get('curDirIndex').asType('float') ==
-          tagPrefabListBlack[tagPrefabListBlack.length - 1].get('dirUIIndex').asType('float')
-        ) {
-          //通知棋子移动
-          gstsServerConfirmAndMovePiece(
-            tagPrefabListBlack[tagPrefabListBlack.length - 1],
-            powerPercent,
-            self
-          )
-        }
-        gsts.f.destroyEntity(tagPrefabListBlack[tagPrefabListBlack.length - 1])
-      }
+      gstsServerDestroyOldDirectionMarkers()
 
       //发射后销毁落点指示
       gstsServerDestroyLandingMarker()
 
-      //清理自身变量
-      self.set('curDirIndex', 999)
-      self.set('curChooseChess', self)
-      self.set('isControl', false)
-
-      //更新玩家步数
-      let step = self.get('step').asType('float')
-      let updateStep = step + 1
-      self.set('step', updateStep)
-
-      f.setCustomVariable(self, 'ischarge', false)
-      f.stopTimer(self, 'charge')
-      f.setCustomVariable(self, 'chargePower', 0)
+      //清理发射后玩家蓄力/选子状态
+      gstsServerFinishLaunch(self)
 
       //UI控制
       gstsServerHideUIByChargeStop(self)

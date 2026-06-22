@@ -2,12 +2,14 @@ import { g } from 'genshin-ts/runtime/core'
 import { entity } from 'genshin-ts/runtime/value'
 
 import { deltaMove, deltaMoveTriggerBefore } from '../../contracts/physics'
+import { getServerStageEntity } from '../../contracts/stage'
 import {
   Tick_MoveActive,
   Tick_MoveActiveTriggerBefore,
   Tick_OutCheck
 } from '../../contracts/timers'
-import { gstsServerCalculateImpulse } from '../../core/physics'
+import { PieceVar, PlayerVar, StageVar } from '../../contracts/variables'
+import { gstsServerApplyCannonLaunch, gstsServerCalculateImpulse } from '../../core/physics'
 import { gstsServerMoveChangeTick } from '../../systems/motion/movement'
 import { gstsServerOutCheck } from '../../systems/motion/outOfBounds'
 import { gstsServerAddMoveEntity } from '../../systems/turn/turnState'
@@ -48,18 +50,18 @@ g.server({
       true
     )
 
-    let list1 = f.getCustomVariable(enteringEntity, 'triggerGuidList').asType('entity_list')
-    let list2 = f.getCustomVariable(selfEntity, 'triggerGuidList').asType('entity_list')
+    let list1 = f.getCustomVariable(enteringEntity, PieceVar.triggerGuidList).asType('entity_list')
+    let list2 = f.getCustomVariable(selfEntity, PieceVar.triggerGuidList).asType('entity_list')
 
-    let enterPieceType = enteringEntity.get('棋子类型').asType('str')
-    let selfPieceType = self.get('棋子类型').asType('str')
-    let enterTriCount = enteringEntity.get('triggerCount').asType('float')
-    let selfTriCount = self.get('triggerCount').asType('float')
-    let enterisStart = enteringEntity.get('isStart').asType('bool')
-    let selfisStart = self.get('isStart').asType('bool')
+    let enterPieceType = enteringEntity.get(PieceVar.pieceType).asType('str')
+    let selfPieceType = self.get(PieceVar.pieceType).asType('str')
+    let enterTriCount = enteringEntity.get(PieceVar.triggerCount).asType('float')
+    let selfTriCount = self.get(PieceVar.triggerCount).asType('float')
+    let enterisStart = enteringEntity.get(PieceVar.isStart).asType('bool')
+    let selfisStart = self.get(PieceVar.isStart).asType('bool')
 
-    enteringEntity.set('triggerCount', enterTriCount + 1)
-    self.set('triggerCount', selfTriCount + 1)
+    enteringEntity.set(PieceVar.triggerCount, enterTriCount + 1)
+    self.set(PieceVar.triggerCount, selfTriCount + 1)
 
     gstsServerAddMoveEntity(enteringEntity)
     gstsServerAddMoveEntity(self)
@@ -85,52 +87,19 @@ g.server({
       list1.push(selfEntity)
       // eslint-disable-next-line gsts/list-method-type-constraints
       list2.push(enteringEntity)
-      f.setCustomVariable(enteringEntity, 'triggerGuidList', list1)
-      f.setCustomVariable(selfEntity, 'triggerGuidList', list2)
+      f.setCustomVariable(enteringEntity, PieceVar.triggerGuidList, list1)
+      f.setCustomVariable(selfEntity, PieceVar.triggerGuidList, list2)
       if (enterPieceType == '炮' && enterTriCount == 0 && enterisStart) {
-        //炮的初始加速度
-        let baseVec = Vector3.Normalize(enteringEntity.get('moveVec').asType('vec3'))
-        //获取现在的速度*1.2
-        let moveVec = Vector3.Scale(enteringEntity.get('moveVec').asType('vec3'), 1.2)
-        //获取现在速度的模长
-        let CurSpeedVecM = Vector3.Magnitude(moveVec)
-        //基准速度向量
-        let BaseInitSpeedVec = Vector3.Scale(
-          baseVec,
-          enteringEntity.get('initSpeed').asType('float')
-        )
-        //基准速度模长
-        let BaseInitSpeedVecM = Vector3.Magnitude(BaseInitSpeedVec)
-        //如果不满足基础速度模长条件 则直接转为基础速度
-        if (CurSpeedVecM < BaseInitSpeedVecM) {
-          moveVec = BaseInitSpeedVec
-        }
-
-        enteringEntity.set('moveVec', moveVec)
-        gsts.f.addUniformBasicLinearMotionDevice(enteringEntity, 'forwardMove', 99, moveVec)
-        //增加摩擦力影响速度变化
-        gsts.f.startTimer(enteringEntity, Tick_MoveActive, true, [0.03])
+        gstsServerApplyCannonLaunch(enteringEntity)
       } else if (selfPieceType == '炮' && selfTriCount == 0 && selfisStart) {
-        //炮的初始加速度
-        let baseVec = Vector3.Normalize(self.get('moveVec').asType('vec3'))
-        //获取现在的速度*1.2
-        let moveVec = Vector3.Scale(self.get('moveVec').asType('vec3'), 1.2)
-        //获取现在速度的模长
-        let CurSpeedVecM = Vector3.Magnitude(moveVec)
-        //基准速度向量
-        let BaseInitSpeedVec = Vector3.Scale(baseVec, self.get('initSpeed').asType('float'))
-        //基准速度模长
-        let BaseInitSpeedVecM = Vector3.Magnitude(BaseInitSpeedVec)
-        //如果不满足基础速度模长条件 则直接转为基础速度
-        if (CurSpeedVecM < BaseInitSpeedVecM) {
-          moveVec = BaseInitSpeedVec
-        }
-        self.set('moveVec', moveVec)
-        gsts.f.addUniformBasicLinearMotionDevice(self, 'forwardMove', 99, moveVec)
-        //增加摩擦力影响速度变化
-        gsts.f.startTimer(self, Tick_MoveActive, true, [0.03])
+        gstsServerApplyCannonLaunch(self)
       } else {
-        gstsServerCalculateImpulse(enteringEntity, selfEntity)
+        let startPos = getServerStageEntity()
+          .get(StageVar.curPlayer)
+          .asType('entity')
+          .get(PlayerVar.startPos)
+          .asType('vec3')
+        gstsServerCalculateImpulse(enteringEntity, selfEntity, startPos)
       }
     }
   }

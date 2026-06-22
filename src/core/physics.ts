@@ -1,32 +1,32 @@
-import type { entity } from 'genshin-ts/runtime/value'
+import type { entity, vec3 } from 'genshin-ts/runtime/value'
 
-import { e, radius } from '../contracts/physics'
-import { getServerStageEntity } from '../contracts/stage'
+import { cannonLaunchBoost, deltaT, e, radius } from '../contracts/physics'
 import { Tick_MoveActive, Tick_OutCheck } from '../contracts/timers'
+import { PieceVar } from '../contracts/variables'
 
-export function gstsServerCalculateImpulse(entity_1: entity, entity_2: entity) {
+export function gstsServerCalculateImpulse(entity_1: entity, entity_2: entity, startPos: vec3) {
   let enterPos = gsts.f.getEntityLocationAndRotation(entity_1).location
   let selfPos = gsts.f.getEntityLocationAndRotation(entity_2).location
 
   //质量
-  let mass_1 = gsts.f.getCustomVariable(entity_1, 'Mass').asType('float')
-  let mass_2 = gsts.f.getCustomVariable(entity_2, 'Mass').asType('float')
+  let mass_1 = gsts.f.getCustomVariable(entity_1, PieceVar.mass).asType('float')
+  let mass_2 = gsts.f.getCustomVariable(entity_2, PieceVar.mass).asType('float')
 
   //线速度
-  let vec1 = gsts.f.getCustomVariable(entity_1, 'moveVec').asType('vec3')
-  let vec2 = gsts.f.getCustomVariable(entity_2, 'moveVec').asType('vec3')
+  let vec1 = gsts.f.getCustomVariable(entity_1, PieceVar.moveVec).asType('vec3')
+  let vec2 = gsts.f.getCustomVariable(entity_2, PieceVar.moveVec).asType('vec3')
 
-  let enterTriCount = entity_1.get('triggerCount').asType('float')
-  let selfTriCount = entity_2.get('triggerCount').asType('float')
+  let enterTriCount = entity_1.get(PieceVar.triggerCount).asType('float')
+  let selfTriCount = entity_2.get(PieceVar.triggerCount).asType('float')
 
   //只有第一次进行精密碰撞检测
   if (enterTriCount == 1 && selfTriCount == 1) {
     if (Vector3.Magnitude(vec1) != 0) {
-      enterPos = gstsServerRealDir(entity_1, entity_2)
+      enterPos = gstsServerRealDir(entity_1, entity_2, startPos)
     }
 
     if (Vector3.Magnitude(vec2) != 0) {
-      selfPos = gstsServerRealDir(entity_1, entity_2)
+      selfPos = gstsServerRealDir(entity_1, entity_2, startPos)
     }
   }
 
@@ -37,12 +37,7 @@ export function gstsServerCalculateImpulse(entity_1: entity, entity_2: entity) {
   let vecN = gsts.f._3dVectorSubtraction(selfPos, enterPos)
 
   vecN = gsts.f._3dVectorNormalization(vecN)
-  //获取出发坐标
-  let startPos = getServerStageEntity()
-    .get('curPlayer')
-    .asType('entity')
-    .get('startPos')
-    .asType('vec3')
+  //出发坐标 startPos 由 caller 从 stage.curPlayer.startPos 读取后传入；core/physics 不反向依赖 stage module。
 
   // $\vec{v}_{rel} = \vec{v}_2 - \vec{v}_1$
   // 步骤二：求相对速度
@@ -90,7 +85,7 @@ export function gstsServerCalculateImpulse(entity_1: entity, entity_2: entity) {
 
   let v1 = gsts.f._3dVectorSubtraction(gsts.f._3dVectorSubtraction(vec1, an1), at1)
 
-  gsts.f.setCustomVariable(entity_1, 'moveVec', v1)
+  gsts.f.setCustomVariable(entity_1, PieceVar.moveVec, v1)
   const omg1 = ((jt * radius) / I1) * 30 * -1
 
   gsts.f.stopAndDeleteBasicMotionDevice(entity_1, '', true)
@@ -111,7 +106,7 @@ export function gstsServerCalculateImpulse(entity_1: entity, entity_2: entity) {
   let at2 = gsts.f._3dVectorZoom(vecT, jt / mass_2)
   let v2 = gsts.f._3dVectorAddition(vec2, gsts.f._3dVectorAddition(an2, at2))
 
-  gsts.f.setCustomVariable(entity_2, 'moveVec', v2)
+  gsts.f.setCustomVariable(entity_2, PieceVar.moveVec, v2)
 
   gsts.f.stopAndDeleteBasicMotionDevice(entity_2, '', true)
   gsts.f.addUniformBasicLinearMotionDevice(entity_2, 'forwardMove', 99, v2)
@@ -130,18 +125,33 @@ export function gstsServerCalculateImpulse(entity_1: entity, entity_2: entity) {
 }
 
 /**
+ * 炮首次主动碰撞的加速：把现速放大 cannonLaunchBoost 倍，且不低于基础初速向量。
+ * 原先 triggerNode 对 enteringEntity / self 各写一份镜像逻辑，这里收敛为一处。
+ */
+export function gstsServerApplyCannonLaunch(piece: entity) {
+  let baseVec = Vector3.Normalize(piece.get(PieceVar.moveVec).asType('vec3'))
+  let moveVec = Vector3.Scale(piece.get(PieceVar.moveVec).asType('vec3'), cannonLaunchBoost)
+  let curSpeedVecM = Vector3.Magnitude(moveVec)
+  let baseInitSpeedVec = Vector3.Scale(baseVec, piece.get(PieceVar.initSpeed).asType('float'))
+  let baseInitSpeedVecM = Vector3.Magnitude(baseInitSpeedVec)
+  //不满足基础速度模长条件则直接转为基础速度
+  if (curSpeedVecM < baseInitSpeedVecM) {
+    moveVec = baseInitSpeedVec
+  }
+  piece.set(PieceVar.moveVec, moveVec)
+  gsts.f.addUniformBasicLinearMotionDevice(piece, 'forwardMove', 99, moveVec)
+  //增加摩擦力影响速度变化
+  gsts.f.startTimer(piece, Tick_MoveActive, true, [deltaT])
+}
+
+/**
  * 获取真实碰撞点坐标
  * @param firstChess
  * @param secondChess
  * @returns
  */
-export function gstsServerRealDir(firstChess: entity, secondChess: entity) {
-  let startPos = getServerStageEntity()
-    .get('curPlayer')
-    .asType('entity')
-    .get('startPos')
-    .asType('vec3')
-  let isStart = firstChess.get('isStart').asType('bool')
+export function gstsServerRealDir(firstChess: entity, secondChess: entity, startPos: vec3) {
+  let isStart = firstChess.get(PieceVar.isStart).asType('bool')
   let startChess = firstChess
   let entChess = secondChess
   if (!isStart) {
@@ -149,7 +159,7 @@ export function gstsServerRealDir(firstChess: entity, secondChess: entity) {
     entChess = firstChess
   }
 
-  let movevec = startChess.get('moveVec').asType('vec3')
+  let movevec = startChess.get(PieceVar.moveVec).asType('vec3')
   let step1rad = Vector3.Angle(movevec, Vector3.Sub(entChess.pos, startPos))
   let _Angle = gsts.f.radiansToDegrees(step1rad)
   //方向法向量模长

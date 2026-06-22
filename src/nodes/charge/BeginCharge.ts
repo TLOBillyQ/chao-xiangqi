@@ -1,5 +1,6 @@
 import { g } from 'genshin-ts/runtime/core'
 
+import { PlayerVar } from '../../contracts/variables'
 import { Signal } from '../../resources/signals'
 import { gstsServerHideUIByChargeBegin } from '../../systems/ui/directionUi'
 
@@ -18,7 +19,7 @@ g.server({
   if (isForSelf) {
     //UI控制
     gstsServerHideUIByChargeBegin(self)
-    self.set('ischarge', true)
+    self.set(PlayerVar.isCharge, true)
     self.startTimer('charge', true, [0.03])
   }
 })

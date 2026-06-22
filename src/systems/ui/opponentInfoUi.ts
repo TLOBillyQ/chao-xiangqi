@@ -2,6 +2,7 @@ import { entity } from 'genshin-ts/runtime/value'
 
 import { factionBlack, factionRed } from '../../contracts/editorIds'
 import { getServerStageEntity } from '../../contracts/stage'
+import { PlayerVar, StageVar } from '../../contracts/variables'
 
 /**
  * 双方都在场时按阵营互写对方昵称（红方变量存黑方昵称、黑方变量存红方昵称）。
@@ -26,8 +27,8 @@ export function gstsServerSyncOpponentNicknames() {
     }
   }
   if (hasRed && hasBlack) {
-    redPlayer.set('对方玩家昵称', gsts.f.getPlayerNickname(blackPlayer))
-    blackPlayer.set('对方玩家昵称', gsts.f.getPlayerNickname(redPlayer))
+    redPlayer.set(PlayerVar.opponentNickname, gsts.f.getPlayerNickname(blackPlayer))
+    blackPlayer.set(PlayerVar.opponentNickname, gsts.f.getPlayerNickname(redPlayer))
   }
 }
 
@@ -41,8 +42,8 @@ export function gstsServerSyncOpponentNicknamesOnBothJoined() {
   let players = gsts.f.getListOfPlayerEntitiesOnTheField()
   let stage = getServerStageEntity()
   if (players.length > 1) {
-    if (!stage.get('bothJoined').asType('bool')) {
-      stage.set('bothJoined', true)
+    if (!stage.get(StageVar.bothJoined).asType('bool')) {
+      stage.set(StageVar.bothJoined, true)
       gstsServerSyncOpponentNicknames()
     }
   }

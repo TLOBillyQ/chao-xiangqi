@@ -1,6 +1,7 @@
 import { UIControlGroupStatus } from 'genshin-ts/definitions/enum'
 
 import * as UIControl from '../../contracts/editorIds'
+import { PlayerVar } from '../../contracts/variables'
 
 type UiEntity = Pick<typeof self, 'get' | 'set' | 'setUiControlStatus'>
 
@@ -15,13 +16,13 @@ export function gstsServerHideTitleForRulePage(playerEntity: UiEntity) {
   playerEntity.setUiControlStatus(UIControl.btn_Ready, UIControlGroupStatus.Hidden)
   playerEntity.setUiControlStatus(UIControl.ui_enemyInfo, UIControlGroupStatus.Hidden)
   playerEntity.setUiControlStatus(UIControl.btn_viewRules, UIControlGroupStatus.Hidden)
-  playerEntity.set('titleHiddenByRule', true)
+  playerEntity.set(PlayerVar.titleHiddenByRule, true)
 }
 
 export function gstsServerRestoreTitleAfterRulePage(playerEntity: UiEntity) {
   // 点关闭按钮收起规则页时，若标题是被「查看规则」隐藏的则恢复显示
   // （局内查看规则同样会经过这里，但标记为 false，不会误把开局标题弹出来）
-  if (playerEntity.get('titleHiddenByRule').asType('bool')) {
+  if (playerEntity.get(PlayerVar.titleHiddenByRule).asType('bool')) {
     playerEntity.setUiControlStatus(UIControl.ui_title, UIControlGroupStatus.On)
     playerEntity.setUiControlStatus(UIControl.ui_titleFx1, UIControlGroupStatus.On)
     playerEntity.setUiControlStatus(UIControl.ui_titleFxFull, UIControlGroupStatus.On)
@@ -29,6 +30,6 @@ export function gstsServerRestoreTitleAfterRulePage(playerEntity: UiEntity) {
     playerEntity.setUiControlStatus(UIControl.btn_Ready, UIControlGroupStatus.On)
     playerEntity.setUiControlStatus(UIControl.ui_enemyInfo, UIControlGroupStatus.On)
     playerEntity.setUiControlStatus(UIControl.btn_viewRules, UIControlGroupStatus.On)
-    playerEntity.set('titleHiddenByRule', false)
+    playerEntity.set(PlayerVar.titleHiddenByRule, false)
   }
 }

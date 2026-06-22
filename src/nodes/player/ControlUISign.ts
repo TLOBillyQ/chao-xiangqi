@@ -1,14 +1,15 @@
-import { UIControlGroupStatus } from 'genshin-ts/definitions/enum'
 import { g } from 'genshin-ts/runtime/core'
 
-import { EntityTag } from '../../contracts/editorIds'
 import * as UIControl from '../../contracts/editorIds'
 import { Signal } from '../../resources/signals'
 import {
   gstsServerSwitchToVerticalCamera,
   gstsServerToggleBattleCamera
 } from '../../systems/ui/cameraUi'
-import { gstsServerSwitchDirectionUI } from '../../systems/ui/directionUi'
+import {
+  gstsServerSwitchDirectionUI,
+  gstsServerToggleDirControlByTag
+} from '../../systems/ui/directionUi'
 import {
   gstsServerHideTitleForRulePage,
   gstsServerRestoreTitleAfterRulePage
@@ -20,12 +21,7 @@ g.server({
 }).onSignal(Signal.ControlUI, (_evt, f) => {
   //需要手动修改传入目标
   let targetentity = f.getSelfEntity()
-  let enteringTag = f.getEntityUnitTagList(targetentity)[0]
-  if (enteringTag == EntityTag.Dir) {
-    self.setUiControlStatus(1073741840n, UIControlGroupStatus.On)
-  } else {
-    self.setUiControlStatus(1073741840n, UIControlGroupStatus.Off)
-  }
+  gstsServerToggleDirControlByTag(targetentity)
 })
 
 g.server({

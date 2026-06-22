@@ -1,4 +1,5 @@
 import { EntityTag, factionBlack, factionRed } from '../../contracts/editorIds'
+import { PieceVar, PlayerVar } from '../../contracts/variables'
 
 /**
  * 扫描玩家正下方可选棋子，并维护玩家 ScanEntity 与选中光效。
@@ -14,7 +15,7 @@ export function gstsServerScanPieceTick() {
   let playerPos = gsts.f.getEntityLocationAndRotation(player).location
   let scanPos = gsts.f.create3dVector(playerPos.x, playerPos.y - 5.66, playerPos.z)
   let candidates = gsts.f.getEntityListBySpecifiedRange(factionPieces, scanPos, 1)
-  let isControl = player.get('isControl').asType('bool')
+  let isControl = player.get(PlayerVar.isControl).asType('bool')
 
   if (candidates.length > 0 && isControl) {
     //取距扫描点最近的棋子（minDist==0 作未赋值哨兵，首轮必然赋值）
@@ -31,8 +32,8 @@ export function gstsServerScanPieceTick() {
       }
     }
 
-    let oldScan = player.get('ScanEntity').asType('entity')
-    let pieceType = best.get('棋子类型').asType('str')
+    let oldScan = player.get(PieceVar.scanEntity).asType('entity')
+    let pieceType = best.get(PieceVar.pieceType).asType('str')
 
     let canSelect = 0
     if (pieceType == '士' || pieceType == '帅') {
@@ -50,14 +51,14 @@ export function gstsServerScanPieceTick() {
     }
     //帅在前 3 步内不可选（step 为玩家走棋计数，见 StopCharge）
     if (pieceType == '帅') {
-      if (player.get('step').asType('float') <= 3) {
+      if (player.get(PlayerVar.step).asType('float') <= 3) {
         canSelect = 0
       }
     }
 
     if (oldScan != best && canSelect == 1) {
       gsts.f.clearSpecialEffectsBasedOnSpecialEffectAssets(oldScan, configId(10010010))
-      player.set('ScanEntity', best)
+      player.set(PieceVar.scanEntity, best)
       best.mountLoopingSpecialEffect(
         configId(10010010),
         'GI_RootNode',
@@ -70,8 +71,8 @@ export function gstsServerScanPieceTick() {
       )
     }
   } else {
-    let oldScan = player.get('ScanEntity').asType('entity')
+    let oldScan = player.get(PieceVar.scanEntity).asType('entity')
     gsts.f.clearSpecialEffectsBasedOnSpecialEffectAssets(oldScan, configId(10010010))
-    player.set('ScanEntity', self)
+    player.set(PieceVar.scanEntity, self)
   }
 }

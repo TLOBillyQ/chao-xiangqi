@@ -2,6 +2,7 @@ import { g } from 'genshin-ts/runtime/core'
 
 import { MatchPhase, TurnPhase } from '../../contracts/stage'
 import { Tick_CheckChessMove } from '../../contracts/timers'
+import { StageVar } from '../../contracts/variables'
 import { gstsServerCheckPieceMovementState } from '../../systems/turn/turnState'
 import { gstsServerSyncOpponentNicknamesOnBothJoined } from '../../systems/ui/opponentInfoUi'
 
@@ -10,16 +11,16 @@ g.server({
   name: 'ChessInitGraph'
 }).on('whenEntityIsCreated', (_evt, f) => {
   f.startTimer(self, Tick_CheckChessMove, true, [3])
-  let moveList = self.get('moveList').asType('entity_list')
+  let moveList = self.get(StageVar.moveList).asType('entity_list')
   gsts.f.clearList(moveList)
-  self.set('moveList', moveList)
+  self.set(StageVar.moveList, moveList)
   //两轴生命周期初值（取代 canChange=true/turnInitialized=false）：关卡创建即置 LOBBY/ACTIVE，
   //保 startMatchIfReady 首读幂等闸 matchPhase 有值（自定义变量 set 即创建，注入后需重进关卡生效）。
-  self.set('matchPhase', MatchPhase.LOBBY)
-  self.set('turnPhase', TurnPhase.ACTIVE)
+  self.set(StageVar.matchPhase, MatchPhase.LOBBY)
+  self.set(StageVar.turnPhase, TurnPhase.ACTIVE)
   //本局是否曾满员(2人)——满员单触发同步对方昵称用（见 gstsServerSyncOpponentNicknamesOnBothJoined）
-  self.set('bothJoined', false)
-  self.set('gstsInjectVerify', '2026-06-21-lifecycle-1')
+  self.set(StageVar.bothJoined, false)
+  self.set(StageVar.injectVerify, '2026-06-21-lifecycle-1')
 })
 
 g.server({

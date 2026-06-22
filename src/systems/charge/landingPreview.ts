@@ -1,37 +1,12 @@
 import type { entity, vec3 } from 'genshin-ts/runtime/value'
 
-import {
-  dirPrefabs,
-  EntityTag,
-  factionBlack,
-  factionRed,
-  landingPrefab
-} from '../../contracts/editorIds'
+import { EntityTag, landingPrefab } from '../../contracts/editorIds'
 import { deltaMoveTriggerBefore, landingCalibration, radius } from '../../contracts/physics'
 import { Wall } from '../../contracts/stage'
+import { DirectionVar, PlayerVar } from '../../contracts/variables'
 import { gstsServerVec3ToVec2 } from '../../core/vector'
-
-/**
- * 有效初速：镜像 gstsServerConfirmAndMovePiece 里兵过河初速=25 的覆盖逻辑
- */
-export function gstsServerEffectiveInitSpeed(piece: entity) {
-  let initSpeed = piece.get('initSpeed').asType('float')
-  let pieceType = piece.get('棋子类型').asType('str')
-  let Faction = piece.faction()
-  let pos = piece.pos
-
-  if (Faction == factionRed) {
-    if (pos.x < Wall.center && pieceType == '兵') {
-      initSpeed = 25
-    }
-  }
-  if (Faction == factionBlack) {
-    if (pos.x > Wall.center && pieceType == '兵') {
-      initSpeed = 25
-    }
-  }
-  return initSpeed
-}
+import { gstsServerResolveSelectedDir } from '../piece/directionMarkers'
+import { gstsServerEffectiveInitSpeed } from '../piece/directions'
 
 /**
  * 按真实减速模型预计算自由滑行距离
@@ -115,31 +90,14 @@ export function gstsServerSpawnLandingMarker(spawnPos: vec3, ownerPiece: entity)
  * 缺失则生成；与预计算位置偏差>0.5（含功率增长/归零回弹/中途切方向）则就地重建；预计点越界则钳在墙边
  */
 export function gstsServerReconcileLandingMarker(curPlayer: entity) {
-  let piece = curPlayer.get('curChooseChess').asType('entity')
-  let curDirIndex = curPlayer.get('curDirIndex').asType('float')
+  let piece = curPlayer.get(PlayerVar.curChooseChess).asType('entity')
+  let dirEntity = gstsServerResolveSelectedDir(curPlayer)
 
-  //查找当前选中方向实体的方向向量（同 StopCharge 的匹配方式）
-  let found = false
-  let moveVec = gsts.f.create3dVector(0, 1, 0)
-  let dirListRed = gsts.f.getEntitiesWithSpecifiedPrefabOnTheField(dirPrefabs.red)
-  for (let i = 0; i < dirListRed.length; i++) {
-    if (curDirIndex == dirListRed[i].get('dirUIIndex').asType('float')) {
-      moveVec = dirListRed[i].get('moveVec').asType('vec3')
-      found = true
-    }
-  }
-  let dirListBlack = gsts.f.getEntitiesWithSpecifiedPrefabOnTheField(dirPrefabs.black)
-  for (let i = 0; i < dirListBlack.length; i++) {
-    if (curDirIndex == dirListBlack[i].get('dirUIIndex').asType('float')) {
-      moveVec = dirListBlack[i].get('moveVec').asType('vec3')
-      found = true
-    }
-  }
-
-  if (found) {
+  if (dirEntity != curPlayer) {
+    let moveVec = dirEntity.get(DirectionVar.moveVec).asType('vec3')
     let worldDir = gstsServerVec3ToVec2(moveVec)
     let initSpeed = gstsServerEffectiveInitSpeed(piece)
-    let chargePower = gsts.f.getCustomVariable(curPlayer, 'chargePower').asType('float')
+    let chargePower = gsts.f.getCustomVariable(curPlayer, PlayerVar.chargePower).asType('float')
 
     let v0 = (initSpeed * chargePower) / 100
     let d = gstsServerPredictMoveDistance(v0)

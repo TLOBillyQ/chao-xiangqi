@@ -6,21 +6,22 @@ import {
   Tick_MoveActiveTriggerBefore,
   Tick_OutCheck
 } from '../../contracts/timers'
+import { PieceVar } from '../../contracts/variables'
 
 /**
  * 速度插值结算定时器
  */
 export function gstsServerMoveChangeTick(damping: number) {
-  let oldSpeed = self.get('moveVec').asType('vec3')
+  let oldSpeed = self.get(PieceVar.moveVec).asType('vec3')
   //如果速度小于0.1则停止运动
   if (Vector3.Magnitude(oldSpeed) <= 0.1) {
     self.stopAndDeleteBasicMotionDevice('', true)
-    self.set('triggerCount', 0)
-    self.set('isStart', false)
-    self.set('moveVec', [0, 0, 0])
-    let list = self.get('triggerGuidList').asType('entity_list')
+    self.set(PieceVar.triggerCount, 0)
+    self.set(PieceVar.isStart, false)
+    self.set(PieceVar.moveVec, [0, 0, 0])
+    let list = self.get(PieceVar.triggerGuidList).asType('entity_list')
     gsts.f.clearList(list)
-    self.set<'entity_list'>('triggerGuidList', list)
+    self.set<'entity_list'>(PieceVar.triggerGuidList, list)
     self.clearSpecialEffectsBasedOnSpecialEffectAssets(configId(1199570948))
 
     self.stopTimer(Tick_MoveActive)
@@ -30,7 +31,7 @@ export function gstsServerMoveChangeTick(damping: number) {
     //gstsServerRemoveMoveEntity(self)
   } else {
     const newSpeed = LerpSpeed(oldSpeed, damping)
-    gsts.f.setCustomVariable(self, 'moveVec', newSpeed)
+    gsts.f.setCustomVariable(self, PieceVar.moveVec, newSpeed)
     self.addUniformBasicLinearMotionDevice('forwardMove', 99, newSpeed)
   }
 }

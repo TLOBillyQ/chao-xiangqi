@@ -2,6 +2,7 @@ import { entity } from 'genshin-ts/runtime/value'
 
 import { Wall } from '../../contracts/stage'
 import { Tick_OutCheck } from '../../contracts/timers'
+import { PieceVar } from '../../contracts/variables'
 
 /**
  * 棋子出界判断
@@ -15,8 +16,8 @@ export function gstsServerOutCheck(checkentity: entity) {
   ) {
     //幂等保护：出界检测定时器(0.03s循环)在棋子3秒后销毁前可能反复进入本分支，
     //同一枚子只处理一次出界，避免重复结算/重复落子动画/重复销毁。
-    if (!checkentity.get('isOut').asType('bool')) {
-      checkentity.set('isOut', true)
+    if (!checkentity.get(PieceVar.isOut).asType('bool')) {
+      checkentity.set(PieceVar.isOut, true)
       //删除所有运动器
       gsts.f.stopAndDeleteBasicMotionDevice(checkentity, '', true)
       gsts.f.stopTimer(checkentity, Tick_OutCheck)

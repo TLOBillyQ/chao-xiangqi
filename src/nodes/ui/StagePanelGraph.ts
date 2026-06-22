@@ -1,6 +1,7 @@
 import { g } from 'genshin-ts/runtime/core'
 
 import * as UIControl from '../../contracts/editorIds'
+import { StageVar } from '../../contracts/variables'
 import { Signal } from '../../resources/signals'
 import {
   gstsServerSetOpponentExited,
@@ -20,7 +21,7 @@ import {
  */
 g.server({ id: 1073741847, name: 'StagePanel' }).on('whenUiControlGroupIsTriggered', (_evt, _f) => {
   //注入版本戳：每次交互写一次，供「切换视角」dump 确认 TS 接管生效（旧编辑器版不会写）
-  self.set('gstsTakeoverStagePanel', '1847-v1')
+  self.set(StageVar.takeoverStagePanel, '1847-v1')
   //用「组合索引」(uiControlGroupCompositeIndex / 原图 data-out:2) 而非 uiControlGroupIndex(data-out:3)：
   //这些按钮在编辑器里属同一多控件组合，组合索引每控件唯一；用 GroupIndex 时「模拟退出」会撞到 exit/settle 的组 ID 而误结算。
   if (

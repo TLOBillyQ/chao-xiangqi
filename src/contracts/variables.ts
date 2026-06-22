@@ -4,6 +4,10 @@ export const StageVar = {
   settled: 'settled',
   errorMsg: 'ErrorMsg',
   angleRand: 'AngleRand',
+  bothJoined: 'bothJoined',
+  injectVerify: 'gstsInjectVerify',
+  takeoverReadyToPlay: 'gstsTakeoverReadyToPlay',
+  takeoverStagePanel: 'gstsTakeoverStagePanel',
   //两轴生命周期（关卡实体 float），取代旧 GameStage(1/2/3)+canChange+turnInitialized。ADR-0003。
   matchPhase: 'matchPhase',
   turnPhase: 'turnPhase',
@@ -46,10 +50,17 @@ export const PieceVar = {
   triggerCount: 'triggerCount',
   triggerGuidList: 'triggerGuidList',
   initSpeed: 'initSpeed',
-  scanEntity: 'ScanEntity'
+  scanEntity: 'ScanEntity',
+  initYaw: 'initYaw',
+  fa: 'FA'
 } as const
 
 export const DirectionVar = {
   moveVec: 'moveVec',
   dirUIIndex: 'dirUIIndex'
+} as const
+
+// 阵营「玩家位置」底座物件（铭牌）：昵称写入此变量，由铭牌文本框富文本 {1:s.玩家昵称} 引用。
+export const NameplateVar = {
+  nickname: '玩家昵称'
 } as const

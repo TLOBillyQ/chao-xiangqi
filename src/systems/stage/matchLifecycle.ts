@@ -49,7 +49,7 @@ export function gstsServerCanStartMatch(): boolean {
 export function gstsServerStartMatchIfReady() {
   let stage = getServerStageEntity()
   //版本戳（写关卡实体，供「切换视角」dump 确认 TS 接管生效）。原 readyToPlay:33 上移至此。
-  stage.set('gstsTakeoverReadyToPlay', '1849-v2')
+  stage.set(StageVar.takeoverReadyToPlay, '1849-v2')
   if (stage.get(StageVar.matchPhase).asType('float') == MatchPhase.LOBBY) {
     if (gstsServerCanStartMatch()) {
       gstsServerSetupReadyPlayers()
