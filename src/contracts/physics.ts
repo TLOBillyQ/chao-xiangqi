@@ -2,6 +2,10 @@ export const radius = 1.0
 export const e = 0.93 //碰撞恢复系数
 export const deltaT = 0.03
 
+//碰撞分离阈值：两子中心距超过此值即视为脱离接触，可重新触发下一次碰撞。
+//= 两倍半径（两子表面刚好分开）。碰撞去重据此重整，避免「停下才清」造成的残留条目。
+export const contactSeparation = radius * 2
+
 //运动阻尼
 export const deltaMove = 4.0
 //运动阻尼
