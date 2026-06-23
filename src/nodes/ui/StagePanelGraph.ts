@@ -49,16 +49,19 @@ g.server({ id: 1073741847, name: 'StagePanel' }).on('whenUiControlGroupIsTrigger
 })
 
 //对方点赞：随机播点赞动效（发送方在上面的 btn_showLike 分支）
+//信号来源一律用 signalSourceEntity（原图 data-out:2 = 用【发送信号】发出该信号的实体）。
+//不能用 eventSourceEntity（data-out:0 = 接收该信号的本图实体 = self）：那样下游 gstsServer* 里的
+//`sender != self` 恒为 false，对手端永远收不到点赞动效/对手状态刷新（本 bug 根因）。
 g.server({ id: 1073741847 }).onSignal(Signal.showLike, (_evt, _f) => {
-  gstsServerShowLikeFromSignal(self, _evt.eventSourceEntity as typeof self)
+  gstsServerShowLikeFromSignal(self, _evt.signalSourceEntity as typeof self)
 })
 
 //对方准备/看规则/取消状态变化：刷新本方「对方玩家状态」文案（chgPlayerStage 由 playerCreate 周期发送）
 g.server({ id: 1073741847 }).onSignal(Signal.chgPlayerStage, (_evt, _f) => {
-  gstsServerSetOpponentStageFromSignal(self, _evt.eventSourceEntity as typeof self)
+  gstsServerSetOpponentStageFromSignal(self, _evt.signalSourceEntity as typeof self)
 })
 
 //对方退出：本方「对方玩家状态」置为「对方已退出游戏」
 g.server({ id: 1073741847 }).onSignal(Signal.ExitGame, (_evt, _f) => {
-  gstsServerSetOpponentExited(self, _evt.eventSourceEntity as typeof self)
+  gstsServerSetOpponentExited(self, _evt.signalSourceEntity as typeof self)
 })
