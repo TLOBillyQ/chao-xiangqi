@@ -1,5 +1,7 @@
 # Chess Catapult (超象棋：弹射)
 
+> Depends on [genshin-ts](https://github.com/josStorer/genshin-ts); read-only mirror on this instance: [miliastra/genshin-ts](http://lzxsvn:3000/miliastra/genshin-ts).
+
 A Genshin UGC (千星奇域) project built with genshin-ts. Write chess catapult gameplay logic in TypeScript, compile to node graphs, and inject into maps.
 
 ## Quick Start
